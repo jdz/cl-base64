@@ -2,29 +2,26 @@
 ;;;; *************************************************************************
 ;;;; FILE IDENTIFICATION
 ;;;;
-;;;; Name:          base64.asd
-;;;; Purpose:       ASDF definition file for Base64
+;;;; Name:          base64-test.asd
+;;;; Purpose:       ASDF definition file for Base64 Regression Test
 ;;;; Programmer:    Kevin M. Rosenberg
-;;;; Date Started:  Dec 2002
+;;;; Date Started:  Jan 2003
 ;;;;
-;;;; $Id: base64.asd,v 1.3 2003/01/12 20:25:26 kevin Exp $
+;;;; $Id: base64-test.asd,v 1.1 2003/01/12 20:25:26 kevin Exp $
 ;;;; *************************************************************************
 
 (in-package :asdf)
 
-(defsystem :base64
-  :name "cl-base64"
+#+allegro (require 'tester)
+
+(defsystem :base64-test
+  :name "cl-base64-test"
   :author "Kevin M. Rosenberg based on code by Juri Pakaste"
   :version "1.0"
   :maintainer "Kevin M. Rosenberg <kmr@debian.org>"
   :licence "BSD-style"
-  :description "Base64 encoding and decoding with URI support."
+  :description "Regression test for cl-base64 package"
   
-  :perform (load-op :after (op base64)
-	    (pushnew :base64 cl:*features*))
-  
+  :depends-on (:base64 :kmrcl #-allegro :tester)  
   :components
-  ((:file "package")
-   (:file "encode" :depends-on ("package"))
-   (:file "decode" :depends-on ("package"))
-   ))
+  ((:file "test")))

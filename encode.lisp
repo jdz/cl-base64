@@ -1,9 +1,26 @@
+;;;; -*- Mode: Lisp; Syntax: ANSI-Common-Lisp; Base: 10 -*-
+;;;; *************************************************************************
+;;;; FILE IDENTIFICATION
+;;;;
+;;;; Name:          encode.lisp
+;;;; Purpose:       cl-base64 encoding routines
+;;;; Programmer:    Kevin M. Rosenberg
+;;;; Date Started:  Dec 2002
+;;;;
+;;;; $Id: encode.lisp,v 1.1 2003/01/12 20:25:26 kevin Exp $
+;;;;
 ;;;; This file implements the Base64 transfer encoding algorithm as
 ;;;; defined in RFC 1521 by Borensten & Freed, September 1993.
 ;;;; See: http://www.ietf.org/rfc/rfc1521.txt
 ;;;;
 ;;;; Based on initial public domain code by Juri Pakaste <juri@iki.fi>
 ;;;;
+;;;; Copyright 2002-2003 Kevin M. Rosenberg
+;;;; Permission to use with BSD-style license included in the COPYING file
+;;;; *************************************************************************
+
+(declaim (optimize (debug 3) (speed 3) (safety 1) (compilation-speed 0)))
+
 ;;;; Extended by Kevin M. Rosenberg <kevin@rosenberg.net>:
 ;;;;   - .asd file
 ;;;;   - numerous speed optimizations
@@ -11,58 +28,10 @@
 ;;;;   - Renamed functions now that supporting integer conversions
 ;;;;   - URI-compatible encoding using :uri key
 ;;;;
-;;;; Copyright 2002-2003 Kevin M. Rosenberg
-;;;; Permission to use with BSD-style license included in the COPYING file
-;;;;
-;;;; $Id: src.lisp,v 1.6 2003/01/04 13:43:27 kevin Exp $
+;;;; $Id: encode.lisp,v 1.1 2003/01/12 20:25:26 kevin Exp $
 
-(defpackage #:base64
-  (:use #:cl)
-  (:export #:base64-to-string #:base64-to-integer
-	   #:string-to-base64 #:integer-to-base64))
+(in-package #:cl-base64)
 
-
-(in-package #:base64)
-
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (defvar *encode-table*
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/")
-  (declaim (type simple-string *encode-table*))
-  
-  (defvar *uri-encode-table*
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_")
-  (declaim (type simple-string *uri-encode-table*))
-  
-  (deftype decode-table () '(simple-array fixnum (256)))
-
-  (defvar *decode-table*
-    (let ((da (make-array 256 :adjustable nil :fill-pointer nil
-			  :element-type 'fixnum
-			  :initial-element -1)))
-      (loop for char of-type character across *encode-table*
-	    for index of-type fixnum from 0 below 64
-	    do (setf (aref da (the fixnum (char-code char))) index))
-      da))
-  
-  (defvar *uri-decode-table*
-    (let ((da (make-array 256 :adjustable nil :fill-pointer nil
-			  :element-type 'fixnum
-			  :initial-element -1)))
-      (loop
-       for char of-type character across *uri-encode-table*
-       for index of-type fixnum from 0 below 64
-       do (setf (aref da (the fixnum (char-code char))) index))
-      da))
-  
-  (declaim (type decode-table *decode-table* *uri-decode-table*))
-  
-  (defvar *pad-char* #\=)
-  (defvar *uri-pad-char* #\.)
-  (declaim (type character *pad-char* *uri-pad-char*))
-  )
-
-
-;;; Utilities
 
 (defun round-next-multiple (x n)
   "Round x up to the next highest multiple of n."
@@ -73,16 +42,6 @@
     (if (zerop remainder)
 	x
 	(the fixnum (+ x (the fixnum (- n remainder)))))))
-
-(declaim (inline whitespace-p))
-(defun whitespace-p (c)
-  "Returns T for a whitespace character."
-  (or (char= c #\Newline) (char= c #\Linefeed)
-      (char= c #\Return) (char= c #\Space)
-      (char= c #\Tab)))
-
-
-;; Encode routines
 
 (defun string-to-base64 (string &key (uri nil) (columns 0) (stream nil))
   "Encode a string array to base64. If columns is > 0, designates
@@ -116,14 +75,15 @@ with a #\Newline."
       (declare (fixnum string-length padded-length col ioutput)
 	       (simple-string result))
       (labels ((output-char (ch)
-		 (when (= col columns)
-		   (if stream
-		       (write-char #\Newline stream)
-		       (progn
-			 (setf (schar result ioutput) #\Newline)
-			 (incf ioutput)))
-		   (setq col 0))
-		 (incf col)
+		 (if (= col columns)
+		     (progn
+		       (if stream
+			   (write-char #\Newline stream)
+			   (progn
+			     (setf (schar result ioutput) #\Newline)
+			     (incf ioutput)))
+		       (setq col 1))
+		     (incf col))
 		 (if stream
 		     (write-char ch stream)
 		     (progn
@@ -226,8 +186,8 @@ with a #\Newline."
 	   (last-char (1- strlen))
 	   (str (make-string strlen))
 	   (col (if (zerop last-line-len)
-		    (1- columns)
-		    (1- last-line-len))))
+		     columns
+		    last-line-len)))
       (declare (fixnum padded-length num-lines col last-char
 		       padding-chars last-line-len))
       (unless (plusp columns)
@@ -304,79 +264,3 @@ with a #\Newline."
 	      (schar encode-table 6bit-value))
 	))))
 
-;;; Decoding
-
-(defun base64-to-string (string &key (uri nil))
-  "Decode a base64 string to a string array."
-  (declare (string string)
-	   (optimize (speed 3)))
-  (let ((pad (if uri *uri-pad-char* *pad-char*))
-	(decode-table (if uri *uri-decode-table* *decode-table*)))
-    (declare (type decode-table decode-table)
-	     (character pad))
-    (let ((result (make-string (* 3 (truncate (length string) 4))))
-	  (ridx 0))
-      (declare (simple-string result)
-	       (fixnum ridx))
-      (loop
-	 for char of-type character across string
-	 for svalue of-type fixnum = (aref decode-table (the fixnum (char-code char)))
-	 with bitstore of-type fixnum = 0
-	 with bitcount of-type fixnum = 0
-	 do
-	   (cond
-	     ((>= svalue 0)
-	      (setf bitstore (logior
-			      (the fixnum (ash bitstore 6))
-			      svalue))
-	      (incf bitcount 6)
-	      (when (>= bitcount 8)
-		(decf bitcount 8)
-		(setf (char result ridx)
-		      (code-char (the fixnum
-				   (logand
-				    (the fixnum
-				      (ash bitstore
-					   (the fixnum (- bitcount))))
-				    #xFF))))
-		(incf ridx)
-		(setf bitstore (the fixnum (logand bitstore #xFF)))))
-	     ((char= char pad)
-	      ;; Could add checks to make sure padding is correct
-	      ;; Currently, padding is ignored
-	      )
-	     ((whitespace-p char)
-	      ;; Ignore whitespace
-	      )
-	     ((minusp svalue)
-	      (warn "Bad character ~W in base64 decode" char))
-))
-      (subseq result 0 ridx))))
-  
-  
-(defun base64-to-integer (string &key (uri nil))
-  "Decodes a base64 string to an integer"
-  (declare (string string)
-	   (optimize (speed 3)))
-  (let ((pad (if uri *uri-pad-char* *pad-char*))
-	(decode-table (if uri *uri-decode-table* *decode-table*)))
-    (declare (type decode-table decode-table)
-	     (character pad))
-    (let ((value 0))
-      (declare (integer value))
-      (loop
-	 for char of-type character across string
-	 for svalue of-type fixnum =
-	   (aref decode-table (the fixnum (char-code char)))
-	 do
-	   (cond
-	     ((>= svalue 0)
-	      (setq value (+ svalue (ash value 6))))
-	     ((char= char pad)
-	      (setq value (ash value -2)))
-	     ((whitespace-p char)
-	      ; ignore whitespace
-	      )
-	     ((minusp svalue)
-	      (warn "Bad character ~W in base64 decode" char))))
-      value)))
