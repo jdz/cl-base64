@@ -1,0 +1,17 @@
+cl-base64 (1.1-1) unstable; urgency=low
+
+  * Rewritten version, significant optimizations
+  * BSD-style license
+  * Adds conversion to and from integers
+  * Renamed functions
+
+ -- Kevin M. Rosenberg <kmr@debian.org>  Sat, 28 Dec 2002 21:28:42 -0700
+
+cl-base64 (1.0-1) unstable; urgency=low
+
+  * Initial upload
+  * Changes compared to upstream: 
+     - Added .asd file for use with Common Lisp Controller
+     - Changes for Allegro's case sensitive mode
+
+ -- Kevin M. Rosenberg <kmr@debian.org>  Thu, 26 Dec 2002 19:17:51 -0700

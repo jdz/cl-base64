@@ -1,0 +1,18 @@
+Source: cl-base64
+Section: devel
+Priority: optional
+Maintainer: Kevin M. Rosenberg <kmr@debian.org>
+Build-Depends-Indep: debhelper (>= 4.0.0)
+Standards-Version: 3.5.8.0
+
+Package: cl-base64
+Architecture: all
+Depends: ${shlibs:Depends}, common-lisp-controller (>= 3.47)
+Description: Common Lisp package to encode and decode base64 with URI support
+  This package provides highly optimized base64 encoding and decoding.
+  Besides conversion to and from strings, integer conversions are supported.
+  Encoding with Uniform Resource Indentifiers is supported by using
+  a modified encoding table that uses only URI-compatible characters.
+
+
+
