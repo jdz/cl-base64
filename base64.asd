@@ -7,7 +7,7 @@
 ;;;; Programmer:    Kevin M. Rosenberg
 ;;;; Date Started:  Dec 2002
 ;;;;
-;;;; $Id: base64.asd,v 1.23 2003/08/25 16:27:23 kevin Exp $
+;;;; $Id$
 ;;;; *************************************************************************
 
 (in-package #:cl-user)

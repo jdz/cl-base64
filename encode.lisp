@@ -7,7 +7,7 @@
 ;;;; Programmer:    Kevin M. Rosenberg
 ;;;; Date Started:  Dec 2002
 ;;;;
-;;;; $Id: encode.lisp,v 1.7 2003/06/12 14:05:11 kevin Exp $
+;;;; $Id$
 ;;;;
 ;;;; This file implements the Base64 transfer encoding algorithm as
 ;;;; defined in RFC 1521 by Borensten & Freed, September 1993.
@@ -26,7 +26,7 @@
 ;;;;   - Renamed functions now that supporting integer conversions
 ;;;;   - URI-compatible encoding using :uri key
 ;;;;
-;;;; $Id: encode.lisp,v 1.7 2003/06/12 14:05:11 kevin Exp $
+;;;; $Id$
 
 (in-package #:cl-base64)
 

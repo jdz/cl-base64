@@ -7,7 +7,7 @@
 ;;;; Programmer:    Kevin M. Rosenberg
 ;;;; Date Started:  Jan 2003
 ;;;;
-;;;; $Id: tests.lisp,v 1.2 2003/08/25 16:27:23 kevin Exp $
+;;;; $Id$
 ;;;; *************************************************************************
 
 (in-package #:cl-user)
