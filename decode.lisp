@@ -7,7 +7,7 @@
 ;;;; Programmer:    Kevin M. Rosenberg
 ;;;; Date Started:  Dec 2002
 ;;;;
-;;;; $Id: decode.lisp,v 1.3 2003/01/14 11:43:10 kevin Exp $
+;;;; $Id: decode.lisp,v 1.4 2003/01/14 11:59:44 kevin Exp $
 ;;;;
 ;;;; This file implements the Base64 transfer encoding algorithm as
 ;;;; defined in RFC 1521 by Borensten & Freed, September 1993.
@@ -61,7 +61,7 @@
 			  (:string
 			   '((simple-string result)))
 			  (:usb8-array
-			   '((type (array (usigned-byte 8) (*)) result))))
+			   '((type (simple-array (usigned-byte 8) (*)) result))))
 		  (fixnum ridx))
 	 (do* ((bitstore 0)
 	       (bitcount 0)
@@ -146,7 +146,7 @@
 			  (:string
 			   '((simple-string result)))
 			  (:usb8-array
-			   '((type (array (unsigned-byte 8) (*)) result))))
+			   '((type (simple-array (unsigned-byte 8) (*)) result))))
 		  (fixnum ridx))
 	 (loop 
 	    for char of-type character across input

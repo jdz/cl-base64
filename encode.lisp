@@ -7,7 +7,7 @@
 ;;;; Programmer:    Kevin M. Rosenberg
 ;;;; Date Started:  Dec 2002
 ;;;;
-;;;; $Id: encode.lisp,v 1.4 2003/01/14 11:43:10 kevin Exp $
+;;;; $Id: encode.lisp,v 1.5 2003/01/14 11:59:44 kevin Exp $
 ;;;;
 ;;;; This file implements the Base64 transfer encoding algorithm as
 ;;;; defined in RFC 1521 by Borensten & Freed, September 1993.
@@ -28,7 +28,7 @@
 ;;;;   - Renamed functions now that supporting integer conversions
 ;;;;   - URI-compatible encoding using :uri key
 ;;;;
-;;;; $Id: encode.lisp,v 1.4 2003/01/14 11:43:10 kevin Exp $
+;;;; $Id: encode.lisp,v 1.5 2003/01/14 11:59:44 kevin Exp $
 
 (in-package #:cl-base64)
 
@@ -81,7 +81,7 @@ with a #\Newline."
 			(ioutput 0)))
 	      (col (if (plusp columns)
 		       0
-		       (1+ padded-length))))
+		       (the fixnum (1+ padded-length)))))
 	 (declare (fixnum string-length padded-length col
 			  ,@(when (eq output-type :string)
 				  '(ioutput)))
@@ -129,8 +129,8 @@ with a #\Newline."
 			       (the fixnum
 				 (logand #x3f svalue))))
 		       (output-char pad))))
-	(do ((igroup 0 (1+ igroup))
-	     (isource 0 (+ isource 3)))
+	(do ((igroup 0 (the fixnum (1+ igroup)))
+	     (isource 0 (the fixnum (+ isource 3))))
 	    ((= igroup complete-group-count)
 	     (cond
 	       ((= remainder 2)
@@ -149,9 +149,11 @@ with a #\Newline."
 			(ash
 			 ,(case input-type
 				(:string
-				 '(char-code (the character (char input (1+ isource)))))
+				 '(char-code (the character (char input
+								  (the fixnum (1+ isource))))))
 				(:usb8-array
-				 '(the fixnum (aref input (1+ isource)))))
+				 '(the fixnum (aref input (the fixnum
+							    (1+ isource))))))
 			 8))))
 		 3))
 	       ((= remainder 1)
@@ -188,14 +190,16 @@ with a #\Newline."
 		 (the fixnum
 		   ,(case input-type
 			  (:string
-			   '(char-code (the character (char input (1+ isource)))))
+			   '(char-code (the character (char input
+							    (the fixnum (1+ isource))))))
 			(:usb8-array
 			 '(aref input (1+ isource)))))
 		 8))
 	      (the fixnum
 		,(case input-type
 		       (:string
-			'(char-code (the character (char input (+ 2 isource)))))
+			'(char-code (the character (char input
+							 (the fixnum (+ 2 isource))))))
 		       (:usb8-array
 			'(aref input (+ 2 isource))))
 		)))
@@ -289,9 +293,10 @@ with a #\Newline."
 	   (last-nonpad-char (1- nonpad-chars))
 	   (str (make-string strlen)))
       (declare (fixnum padded-length last-nonpad-char))
-      (do* ((strpos 0 (1+ strpos))
+      (do* ((strpos 0 (the fixnum (1+ strpos)))
 	    (int (ash input (/ padding-bits 3)) (ash int -6))
-	    (6bit-value (logand int #x3f) (logand int #x3f)))
+	    (6bit-value (the fixnum (logand int #x3f))
+			(the fixnum (logand int #x3f))))
 	   ((= strpos nonpad-chars)
 	    (let ((col 0))
 	      (declare (fixnum col))

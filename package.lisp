@@ -7,7 +7,7 @@
 ;;;; Programmer:    Kevin M. Rosenberg
 ;;;; Date Started:  Dec 2002
 ;;;;
-;;;; $Id: package.lisp,v 1.2 2003/01/12 22:32:40 kevin Exp $
+;;;; $Id: package.lisp,v 1.3 2003/01/14 11:59:44 kevin Exp $
 ;;;;
 ;;;; *************************************************************************
 
@@ -50,7 +50,7 @@
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_")
 (declaim (type simple-string *uri-encode-table*))
 
-(deftype decode-table () '(array fixnum (256)))
+(deftype decode-table () '(simple-array fixnum (256)))
 
 (defun make-decode-table (encode-table)
   (let ((dt (make-array 256 :adjustable nil :fill-pointer nil
