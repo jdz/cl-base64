@@ -7,7 +7,7 @@
 ;;;; Programmer:    Kevin M. Rosenberg
 ;;;; Date Started:  Dec 2002
 ;;;;
-;;;; $Id: base64.asd,v 1.6 2003/04/15 15:37:44 kevin Exp $
+;;;; $Id: base64.asd,v 1.7 2003/04/15 15:39:26 kevin Exp $
 ;;;; *************************************************************************
 
 (in-package :asdf)
@@ -28,7 +28,7 @@
   :perform (load-op :after (op base64)
 	    (pushnew :base64 cl:*features*))
 
-  :depends-on (:kmrcl) ;; only for test-op
+  :depends-on (:kmrcl :tester) ;; only for test-op
   
   :components
   ((:file "package")
