@@ -7,7 +7,7 @@
 ;;;; Programmer:    Kevin M. Rosenberg
 ;;;; Date Started:  Jan 2003
 ;;;;
-;;;; $Id: base64-tests.lisp,v 1.11 2003/04/15 16:22:45 kevin Exp $
+;;;; $Id: base64-tests.lisp,v 1.12 2003/04/15 16:24:37 kevin Exp $
 ;;;; *************************************************************************
 
 (in-package :cl-user)
@@ -32,9 +32,11 @@
     (do* ((columns 0 (+ columns 4)))
 	 ((> columns length))
       ;; Test against cl-base64 routines
-      (assert (= integer (base64-string-to-integer
-			  (integer-to-base64-string integer :columns columns))))
-      (assert (string= (base64-string-to-string
+      (assert (= integer
+		 (base64-string-to-integer
+		  (integer-to-base64-string integer :columns columns))))
+      (assert (string= string
+		       (base64-string-to-string
 			(string-to-base64-string string :columns columns))))
       
       ;; Test against AllegroCL built-in routines
