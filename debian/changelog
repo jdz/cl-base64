@@ -7,7 +7,7 @@ cl-base64 (3.0.0-1) unstable; urgency=low
   * Fix error in integer-to-base64 when using columns
   * Add base64-test.asd and test.lisp regression suite
 
- -- Kevin M. Rosenberg <kmr@debian.org>  Sat,  4 Jan 2003 06:40:32 -0700
+ -- Kevin M. Rosenberg <kmr@debian.org>  Mon, 13 Jan 2003 14:41:52 -0700
 
 cl-base64 (2.1.0-1) unstable; urgency=low
 

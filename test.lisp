@@ -7,7 +7,7 @@
 ;;;; Programmer:    Kevin M. Rosenberg
 ;;;; Date Started:  Jan 2003
 ;;;;
-;;;; $Id: test.lisp,v 1.1 2003/01/13 21:39:46 kevin Exp $
+;;;; $Id: test.lisp,v 1.2 2003/01/13 21:56:04 kevin Exp $
 ;;;; *************************************************************************
 
 (in-package :cl-user)
@@ -66,9 +66,9 @@
 	 (usb8 (string-to-usb8-array str))
 	 (int 12345678901234567890)
 	 (n 50000))
-    (time-iterations n (integer-to-base64 int))
+    (time-iterations n (integer-to-base64-string int))
     (time-iterations n (excl:integer-to-base64-string int))
-    (time-iterations n (string-to-base64 str))
+    (time-iterations n (string-to-base64-string str))
     (time-iterations n (excl:usb8-array-to-base64-string usb8))))
 
       
