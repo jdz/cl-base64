@@ -7,7 +7,7 @@
 ;;;; Programmer:    Kevin M. Rosenberg
 ;;;; Date Started:  Jan 2003
 ;;;;
-;;;; $Id: base64-tests.lisp,v 1.8 2003/04/15 16:13:55 kevin Exp $
+;;;; $Id: base64-tests.lisp,v 1.9 2003/04/15 16:15:21 kevin Exp $
 ;;;; *************************************************************************
 
 (in-package :cl-user)
@@ -35,7 +35,8 @@
 	   ((> columns length))
       ;; Test against cl-base64 routines
 	(test integer (base64-string-to-integer
-				 (integer-to-base64-string integer :columns columns)))
+				 (integer-to-base64-string integer :columns columns))
+	      :test #'eql)
 	(test string (base64-string-to-string
 				(string-to-base64-string string :columns columns))
 		      :test #'string=)
