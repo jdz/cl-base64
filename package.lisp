@@ -7,7 +7,7 @@
 ;;;; Programmer:    Kevin M. Rosenberg
 ;;;; Date Started:  Dec 2002
 ;;;;
-;;;; $Id: package.lisp,v 1.3 2003/01/14 11:59:44 kevin Exp $
+;;;; $Id: package.lisp,v 1.4 2003/04/15 16:05:39 kevin Exp $
 ;;;;
 ;;;; *************************************************************************
 
@@ -37,6 +37,8 @@
 	   #:*uri-encode-table*
 	   #:*uri-decode-table*
 	   #:make-decode-table
+
+	   #:test-base64
 	   ))
 
 (in-package #:cl-base64)
