@@ -1,4 +1,4 @@
 #!/bin/bash -e
 
-dup uffi -Uftp.med-info.com -D/home/ftp/base64 -su $*
+dup cl-base64 -Uftp.b9.com -D/home/ftp/cl-base64 -su $*
 
