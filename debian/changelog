@@ -1,3 +1,9 @@
+cl-base64 (3.0.1-1) unstable; urgency=low
+
+  * Fix output of base64-string-to-usb8-array
+
+ -- Kevin M. Rosenberg <kmr@debian.org>  Tue, 14 Jan 2003 04:35:05 -0700
+
 cl-base64 (3.0.0-1) unstable; urgency=low
 
   * Remove src.lisp and add package.lisp, decode.lisp, encode.lisp	

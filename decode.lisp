@@ -7,7 +7,7 @@
 ;;;; Programmer:    Kevin M. Rosenberg
 ;;;; Date Started:  Dec 2002
 ;;;;
-;;;; $Id: decode.lisp,v 1.2 2003/01/12 22:32:40 kevin Exp $
+;;;; $Id: decode.lisp,v 1.3 2003/01/14 11:43:10 kevin Exp $
 ;;;;
 ;;;; This file implements the Base64 transfer encoding algorithm as
 ;;;; defined in RFC 1521 by Borensten & Freed, September 1993.
@@ -61,7 +61,7 @@
 			  (:string
 			   '((simple-string result)))
 			  (:usb8-array
-			   '((type (array fixnum (*)) result))))
+			   '((type (array (usigned-byte 8) (*)) result))))
 		  (fixnum ridx))
 	 (do* ((bitstore 0)
 	       (bitcount 0)
@@ -71,8 +71,11 @@
 	       ,(case output-type
 		      (:stream
 		       'stream)
-		      ((or :stream :string)
-		       '(subseq result 0 ridx))))
+		      ((:string :usb8-array)
+		       'result)
+		      ;; ((:stream :string)
+		      ;; '(subseq result 0 ridx))))
+		      ))
 	   (declare (fixnum bitstore bitcount)
 		    (character char))
 	   (let ((svalue (aref decode-table (the fixnum (char-code char)))))
@@ -143,7 +146,7 @@
 			  (:string
 			   '((simple-string result)))
 			  (:usb8-array
-			   '((type (array fixnum (*)) result))))
+			   '((type (array (unsigned-byte 8) (*)) result))))
 		  (fixnum ridx))
 	 (loop 
 	    for char of-type character across input
@@ -189,7 +192,7 @@
 	 ,(case output-type
 		(:stream
 		 'stream)
-		((:stream :string)
+		((:usb8-array :string)
 		 '(subseq result 0 ridx)))))))
 
 (def-base64-string-to-* :string)
