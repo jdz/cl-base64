@@ -1,4 +1,4 @@
-cl-base64 (3.0.1-2) unstable; urgency=low
+cl-base64 (3.0.2-1) unstable; urgency=low
 
   * Change declarations from array to simple-array where feasible
   * add more fixnum declarations where helpful
