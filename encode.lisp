@@ -7,7 +7,7 @@
 ;;;; Programmer:    Kevin M. Rosenberg
 ;;;; Date Started:  Dec 2002
 ;;;;
-;;;; $Id: encode.lisp,v 1.1 2003/01/12 20:25:26 kevin Exp $
+;;;; $Id: encode.lisp,v 1.2 2003/01/12 22:32:40 kevin Exp $
 ;;;;
 ;;;; This file implements the Base64 transfer encoding algorithm as
 ;;;; defined in RFC 1521 by Borensten & Freed, September 1993.
@@ -28,7 +28,7 @@
 ;;;;   - Renamed functions now that supporting integer conversions
 ;;;;   - URI-compatible encoding using :uri key
 ;;;;
-;;;; $Id: encode.lisp,v 1.1 2003/01/12 20:25:26 kevin Exp $
+;;;; $Id: encode.lisp,v 1.2 2003/01/12 22:32:40 kevin Exp $
 
 (in-package #:cl-base64)
 
@@ -147,11 +147,159 @@ with a #\Newline."
 	      (the fixnum
 		(char-code (the character (char string (+ 2 isource)))))))
 	   4))))))
-  
-(defun integer-to-base64 (input &key (uri nil) (columns 0) (stream nil))
-  (if stream
-      (integer-to-base64-stream input stream :uri uri :columns columns)
-      (integer-to-base64-string input :uri uri :columns columns)))
+
+(defmacro def-*-to-base64-* (input-type output-type)
+  `(defun ,(intern (concatenate 'string (symbol-name input-type)
+				(symbol-name :-to-base-64-)
+				(symbol-name output-type)))
+       (input
+	,@(when (eq output-type :stream)
+		'output)
+	&key (uri nil) (columns 0))
+     "Encode a string array to base64. If columns is > 0, designates
+maximum number of columns in a line and the string will be terminated
+with a #\Newline."
+     (declare (,@(case input-type
+		       (:string
+			'((string input)))
+		       (:usb8-array)
+		       '((type (array fixnum (*))) input))
+		 (fixnum columns)
+		 (optimize (speed 3))))
+     (let ((pad (if uri *uri-pad-char* *pad-char*))
+	   (encode-table (if uri *uri-encode-table* *encode-table*)))
+       (declare (simple-string encode-table)
+		(character pad))
+       (let* ((string-length (length input))
+	      (complete-group-count (truncate string-length 3))
+	      (remainder (nth-value 1 (truncate string-length 3)))
+	      (padded-length (* 4 (truncate (+ string-length 2) 3)))
+	      (num-lines (if (plusp columns)
+			     (truncate (+ padded-length (1- columns)) columns)
+			     0))
+	      (num-breaks (if (plusp num-lines)
+			      (1- num-lines)
+			      0))
+	   (strlen (if stream
+		       0
+		       (+ padded-length num-breaks)))
+	   (result (make-string strlen))
+	   (col (if (plusp columns)
+		    0
+		    (1+ padded-length)))
+	   (ioutput 0))
+      (declare (fixnum string-length padded-length col ioutput)
+	       (simple-string result))
+      (macrolet ((output-char (ch)
+		   (if (= col columns)
+		       (progn
+			 (if stream
+			     (write-char #\Newline stream)
+			     (progn
+			       (setf (schar result ioutput) #\Newline)
+			       (incf ioutput)))
+			 (setq col 1))
+		       (incf col))
+		   ,@(case output-type
+			   (:stream
+			    '((write-char ch stream))
+			    (:string
+			     '((setf (schar result ioutput) ch)
+			       (incf ioutput)))))))
+	(labels ((output-group (svalue chars)
+		   (declare (fixnum svalue chars))
+		   (output-char
+		    (schar encode-table
+			   (the fixnum
+			     (logand #x3f
+				     (the fixnum (ash svalue -18))))))
+		   (output-char
+		    (schar encode-table
+			   (the fixnum
+			     (logand #x3f
+				     (the fixnum (ash svalue -12))))))
+		   (if (> chars 2)
+		       (output-char
+			(schar encode-table
+			   (the fixnum
+			     (logand #x3f
+				     (the fixnum (ash svalue -6))))))
+		       (output-char pad))
+		   (if (> chars 3)
+		       (output-char
+			(schar encode-table
+			       (the fixnum
+				 (logand #x3f svalue))))
+		 (output-char pad))))
+	  (do ((igroup 0 (1+ igroup))
+	       (isource 0 (+ isource 3)))
+	      ((= igroup complete-group-count)
+	       (cond
+		 ((= remainder 2)
+		  (output-group
+		   (the fixnum
+		     (+
+		    (the fixnum
+		      (ash
+		       ,(case input-type
+			      (:string
+			       '(char-code (the character (char input isource))))
+			      (:usb8-array
+			       '(the fixnum (aref input isource))))
+		       16))
+		    (the fixnum
+		      (ash
+		       ,(case input-type
+			      (:string
+			       '(char-code (the character (char input (1+ isource)))))
+			      (:usb8-array
+			       '(the fixnum (aref input (1+ isource)))))
+		       8))))
+		   3))
+		 ((= remainder 1)
+		  (output-group
+		   (the fixnum
+		     ,(case input-type
+			    (:string
+			     '(char-code (the character (char input isource))))
+			    (:usb8-array
+			     '(the fixnum (aref input isource)))))
+		   2)))
+	       result)
+	    (declare (fixnum igroup isource))
+	    (output-group 
+	     (the fixnum
+	       (+
+		(the fixnum
+		  (ash
+		   ,(case input-type
+			  (:string
+			   '(char-code (the character (char input isource))))
+			  (:usb8-array
+			   '(the fixnum (aref input isource))))
+		   16))
+		(the fixnum
+		  (ash
+		   ,(case input-type
+			  (:string
+			   '(char-code (the character (char input (1+ isource)))))
+			  (:usb8-array
+			   '(the fixnum (aref input (1+ isource)))))
+		   8))
+		(the fixnum
+		  ,(case input-type
+			 (:string
+			  '(char-code (the character (char input (+ 2 isource)))))
+			 (:usb8-array
+			  '(the fixnum (aref input (+ 2 isource)))))
+		  )))
+	     4))))))))
+
+(def-*-to-base64-* :string :string)
+(def-*-to-base64-* :string :stream)
+(def-*-to-base64-* :usb8-array :string)
+(def-*-to-base64-* :usb8-array :stream)
+
 
 (defun integer-to-base64-string (input &key (uri nil) (columns 0))
   "Encode an integer to base64 format."

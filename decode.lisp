@@ -7,7 +7,7 @@
 ;;;; Programmer:    Kevin M. Rosenberg
 ;;;; Date Started:  Dec 2002
 ;;;;
-;;;; $Id: decode.lisp,v 1.1 2003/01/12 20:25:26 kevin Exp $
+;;;; $Id: decode.lisp,v 1.2 2003/01/12 22:32:40 kevin Exp $
 ;;;;
 ;;;; This file implements the Base64 transfer encoding algorithm as
 ;;;; defined in RFC 1521 by Borensten & Freed, September 1993.
@@ -21,6 +21,8 @@
 
 (declaim (optimize (debug 3) (speed 3) (safety 1) (compilation-speed 0)))
 
+(in-package #:cl-base64)
+
 (declaim (inline whitespace-p))
 (defun whitespace-p (c)
   "Returns T for a whitespace character."
@@ -31,78 +33,21 @@
 
 ;;; Decoding
 
-(defun base64-to-string (string &key (uri nil))
-  "Decode a base64 string to a string array."
-  (declare (string string)
-	   (optimize (speed 3)))
-  (let ((pad (if uri *uri-pad-char* *pad-char*))
-	(decode-table (if uri *uri-decode-table* *decode-table*)))
-    (declare (type decode-table decode-table)
-	     (character pad))
-    (let ((result (make-string (* 3 (truncate (length string) 4))))
-	  (ridx 0))
-      (declare (simple-string result)
-	       (fixnum ridx))
-      (loop
-	 for char of-type character across string
-	 for svalue of-type fixnum = (aref decode-table
-					   (the fixnum (char-code char)))
-	 with bitstore of-type fixnum = 0
-	 with bitcount of-type fixnum = 0
-	 do
-	   (cond
-	     ((>= svalue 0)
-	      (setf bitstore (logior
-			      (the fixnum (ash bitstore 6))
-			      svalue))
-	      (incf bitcount 6)
-	      (when (>= bitcount 8)
-		(decf bitcount 8)
-		(setf (char result ridx)
-		      (code-char (the fixnum
-				   (logand
-				    (the fixnum
-				      (ash bitstore
-					   (the fixnum (- bitcount))))
-				    #xFF))))
-		(incf ridx)
-		(setf bitstore (the fixnum (logand bitstore #xFF)))))
-	     ((char= char pad)
-	      ;; Could add checks to make sure padding is correct
-	      ;; Currently, padding is ignored
-	      )
-	     ((whitespace-p char)
-	      ;; Ignore whitespace
-	      )
-	     ((minusp svalue)
-	      (warn "Bad character ~W in base64 decode" char))
-))
-      (subseq result 0 ridx))))
-
-#|
-(def-base64-stream-to-* :string)
-(def-base64-stream-to-* :stream)
-(def-base64-stream-to-* :usb8-array)
-|#
-
-(defmacro def-base64-string-to-* (output-type)
-  `(defun ,(case output-type
-	    (:string
-	     'base64-string-to-string)
-	    (:stream
-	     'base64-string-to-stream)
-	    (:usb8-array
-	     'base64-string-to-usb8-array))
+#+ignore
+(defmacro def-base64-stream-to-* (output-type)
+  `(defun ,(intern (concatenate 'string (symbol-name :base64-stream-to-)
+				(symbol-name output-type)))
        (input &key (uri nil)
 	,@(when (eq output-type :stream)
 		'(stream)))
-     "Decode base64 string"
-     (declare (input string)
+     ,(concatenate 'string "Decode base64 stream to " (string-downcase
+						       (symbol-name output-type)))
+     (declare (stream input)
 	      (optimize (speed 3)))
      (let ((pad (if uri *uri-pad-char* *pad-char*))
 	   (decode-table (if uri *uri-decode-table* *decode-table*)))
        (declare (type decode-table decode-table)
-		(character pad))
+		(type character pad))
        (let (,@(case output-type
 		     (:string
 		      '((result (make-string (* 3 (truncate (length string) 4))))))
@@ -114,12 +59,94 @@
 	       (ridx 0))
 	 (declare ,@(case output-type
 			  (:string
-			   '((simple-string result))
+			   '((simple-string result)))
+			  (:usb8-array
+			   '((type (array fixnum (*)) result))))
+		  (fixnum ridx))
+	 (do* ((bitstore 0)
+	       (bitcount 0)
+	       (char (read-char stream nil #\null)
+		     (read-char stream nil #\null)))
+	      ((eq char #\null)
+	       ,(case output-type
+		      (:stream
+		       'stream)
+		      ((or :stream :string)
+		       '(subseq result 0 ridx))))
+	   (declare (fixnum bitstore bitcount)
+		    (character char))
+	   (let ((svalue (aref decode-table (the fixnum (char-code char)))))
+	     (declare (fixnum svalue))
+	     (cond
+	       ((>= svalue 0)
+		(setf bitstore (logior
+				(the fixnum (ash bitstore 6))
+				svalue))
+		(incf bitcount 6)
+		(when (>= bitcount 8)
+		  (decf bitcount 8)
+		  (let ((ovalue (the fixnum
+				  (logand
+				   (the fixnum
+				     (ash bitstore
+					  (the fixnum (- bitcount))))
+				   #xFF))))
+		    (declare (fixnum ovalue))
+		    ,(case output-type
+			   (:string
+			    '(setf (char result ridx) (code-char ovalue)))
 			   (:usb8-array
-			    '((type (array fixnum (*)) result)))))
+			    '(setf (aref result ridx) ovalue))
+			   (:stream
+			    '(write-char (code-char ovalue) stream)))
+		    (incf ridx)
+		    (setf bitstore (the fixnum (logand bitstore #xFF))))))
+	       ((char= char pad)
+		;; Could add checks to make sure padding is correct
+		;; Currently, padding is ignored
+		)
+	       ((whitespace-p char)
+		;; Ignore whitespace
+		)
+	       ((minusp svalue)
+		(warn "Bad character ~W in base64 decode" char))
+	       )))))))
+
+;;(def-base64-stream-to-* :string)
+;;(def-base64-stream-to-* :stream)
+;;(def-base64-stream-to-* :usb8-array)
+
+(defmacro def-base64-string-to-* (output-type)
+  `(defun ,(intern (concatenate 'string (symbol-name :base64-string-to-)
+				(symbol-name output-type)))
+       (input &key (uri nil)
+	,@(when (eq output-type :stream)
+		'(stream)))
+     ,(concatenate 'string "Decode base64 string to " (string-downcase
+						       (symbol-name output-type)))
+     (declare (string input)
+	      (optimize (speed 3)))
+     (let ((pad (if uri *uri-pad-char* *pad-char*))
+	   (decode-table (if uri *uri-decode-table* *decode-table*)))
+       (declare (type decode-table decode-table)
+		(type character pad))
+       (let (,@(case output-type
+		     (:string
+		      '((result (make-string (* 3 (truncate (length input) 4))))))
+		     (:usb8-array
+		      '((result (make-array (* 3 (truncate (length input) 4))
+				 :element-type '(unsigned-byte 8)
+				 :fill-pointer nil
+				 :adjustable nil)))))
+	       (ridx 0))
+	 (declare ,@(case output-type
+			  (:string
+			   '((simple-string result)))
+			  (:usb8-array
+			   '((type (array fixnum (*)) result))))
 		  (fixnum ridx))
 	 (loop 
-	    for char of-type character across string
+	    for char of-type character across input
 	    for svalue of-type fixnum = (aref decode-table
 					      (the fixnum (char-code char)))
 	    with bitstore of-type fixnum = 0
@@ -133,22 +160,22 @@
 		 (incf bitcount 6)
 		 (when (>= bitcount 8)
 		   (decf bitcount 8)
-		   (let ((svalue (the fixnum
+		   (let ((ovalue (the fixnum
 				   (logand
 				    (the fixnum
 				      (ash bitstore
 					   (the fixnum (- bitcount))))
 				    #xFF))))
-		     (declare (fixnum svalue))
-		     ,@(case output-type
-			     (:string
-			      (setf (char result ridx) (code-char svalue)))
-			     (:usb8-array
-			      (setf (aref result ridx) svalue))
-			     (:stream
-			      (write-char (code-char svalue) stream)))
+		     (declare (fixnum ovalue))
+		     ,(case output-type
+			    (:string
+			     '(setf (char result ridx) (code-char ovalue)))
+			    (:usb8-array
+			     '(setf (aref result ridx) ovalue))
+			    (:stream
+			     '(write-char (code-char ovalue) stream)))
 		     (incf ridx)
-		     (setf bitstore (the fixnum (logand bitstore #xFF)))))
+		     (setf bitstore (the fixnum (logand bitstore #xFF))))))
 		 ((char= char pad)
 		  ;; Could add checks to make sure padding is correct
 		  ;; Currently, padding is ignored
@@ -159,12 +186,16 @@
 		 ((minusp svalue)
 		  (warn "Bad character ~W in base64 decode" char))
 		 ))
-	      (subseq result 0 ridx))))))
+	 ,(case output-type
+		(:stream
+		 'stream)
+		((:stream :string)
+		 '(subseq result 0 ridx)))))))
 
 (def-base64-string-to-* :string)
 (def-base64-string-to-* :stream)
 (def-base64-string-to-* :usb8-array)
-  
+
 ;; input-mode can be :string or :stream
 ;; input-format can be :character or :usb8
 
@@ -195,6 +226,7 @@
 	      (warn "Bad character ~W in base64 decode" char))))
       value)))
 
+
 (defun base64-stream-to-integer (stream &key (uri nil))
   "Decodes a base64 string to an integer"
   (declare (stream stream)
@@ -208,8 +240,8 @@
 		(read-char stream nil #\null)))
 	 ((eq char #\null)
 	  value)
-      (declare (value integer)
-	       (char character))
+      (declare (integer value)
+	       (character char))
       (let ((svalue (aref decode-table (the fixnum (char-code char)))))
 	   (declare (fixnum svalue))
 	   (cond
@@ -220,5 +252,4 @@
 	     ((whitespace-p char)		; ignore whitespace
 	      )
 	     ((minusp svalue)
-	      (warn "Bad character ~W in base64 decode" char))))
-	value)))
+	      (warn "Bad character ~W in base64 decode" char)))))))
