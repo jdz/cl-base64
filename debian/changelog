@@ -1,10 +1,11 @@
 cl-base64 (3.0.0-1) unstable; urgency=low
 
+  * Remove src.lisp and add package.lisp, decode.lisp, encode.lisp	
+  * Add support for usb8-arrays	
+  * Rewrite routines as macros to create efficient functions for
+     converting to and from streams, strings, and usb8-arrays.
   * Fix error in integer-to-base64 when using columns
   * Add base64-test.asd and test.lisp regression suite
-  * Rewrite routines as macros to create efficient functions to
-    converting from strings or streams and converting to streams, strings,
-    and usb8-arrays.
 
  -- Kevin M. Rosenberg <kmr@debian.org>  Sat,  4 Jan 2003 06:40:32 -0700
 
