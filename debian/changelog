@@ -1,3 +1,9 @@
+cl-base64 (3.3.1-1) unstable; urgency=low
+
+  * Rename ASDF system to cl-base64
+
+ -- Kevin M. Rosenberg <kmr@debian.org>  Sun, 18 Apr 2004 10:39:51 -0600
+
 cl-base64 (3.3-1) unstable; urgency=low
 
   * Rework test loading

@@ -2,8 +2,8 @@
 ;;;; *************************************************************************
 ;;;; FILE IDENTIFICATION
 ;;;;
-;;;; Name:          base64.asd
-;;;; Purpose:       ASDF definition file for Base64
+;;;; Name:          cl-base64.asd
+;;;; Purpose:       ASDF definition file for Cl-Base64
 ;;;; Programmer:    Kevin M. Rosenberg
 ;;;; Date Started:  Dec 2002
 ;;;;
@@ -11,11 +11,11 @@
 ;;;; *************************************************************************
 
 (in-package #:cl-user)
-(defpackage #:base64-system (:use #:asdf #:cl))
-(in-package #:base64-system)
+(defpackage #:cl-base64-system (:use #:asdf #:cl))
+(in-package #:cl-base64-system)
 
 
-(defsystem base64
+(defsystem cl-base64
   :name "cl-base64"
   :author "Kevin M. Rosenberg based on initial code by Juri Pakaste"
   :version "3.1"
@@ -32,17 +32,17 @@
    (:file "decode" :depends-on ("package"))
    ))
 
-(defmethod perform ((o test-op) (c (eql (find-system 'base64))))
-  (operate 'load-op 'base64-tests)
-  (operate 'test-op 'base64-tests :force t))
+(defmethod perform ((o test-op) (c (eql (find-system 'cl-base64))))
+  (operate 'load-op 'cl-base64-tests)
+  (operate 'test-op 'cl-base64-tests :force t))
 
-(defsystem base64-tests
-    :depends-on (base64 ptester)
+(defsystem cl-base64-tests
+    :depends-on (cl-base64 ptester)
     :components
     ((:file "tests")))
 
-(defmethod perform ((o test-op) (c (eql (find-system 'base64-tests))))
-  (operate 'load-op 'base64-tests)
+(defmethod perform ((o test-op) (c (eql (find-system 'cl-base64-tests))))
+  (operate 'load-op 'cl-base64-tests)
   (or (funcall (intern (symbol-name '#:do-tests)
-		       (find-package 'base64-test)))
+		       (find-package '#:cl-base64-tests)))
       (error "test-op failed")))

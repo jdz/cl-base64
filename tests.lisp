@@ -12,10 +12,10 @@
 
 (in-package #:cl-user)
 
-(defpackage #:base64-test
-  (:use #:cl #:kmrcl #:base64 #:ptester))
+(defpackage #:base64-tests
+  (:use #:cl #:kmrcl #:cl-base64 #:ptester))
 
-(in-package #:base64-test)
+(in-package #:cl-base64-test)
 
 (defun do-tests ()
   (with-tests (:name "cl-base64 tests")
