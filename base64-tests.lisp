@@ -7,15 +7,12 @@
 ;;;; Programmer:    Kevin M. Rosenberg
 ;;;; Date Started:  Jan 2003
 ;;;;
-;;;; $Id: base64-tests.lisp,v 1.5 2003/04/15 15:55:52 kevin Exp $
+;;;; $Id: base64-tests.lisp,v 1.6 2003/04/15 16:02:21 kevin Exp $
 ;;;; *************************************************************************
 
 (in-package :cl-user)
 
-(defpackage #:base64-test
-  (:use #:cl #:kmrcl #:base64 #:util.test))
-
-(in-package #:base64-test)
+(in-package #:base64)
 
 (defun test-base64 ()
   (setq *break-on-test-failures* t) 
