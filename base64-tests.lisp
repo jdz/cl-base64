@@ -7,7 +7,7 @@
 ;;;; Programmer:    Kevin M. Rosenberg
 ;;;; Date Started:  Jan 2003
 ;;;;
-;;;; $Id: base64-tests.lisp,v 1.7 2003/04/15 16:12:01 kevin Exp $
+;;;; $Id: base64-tests.lisp,v 1.8 2003/04/15 16:13:55 kevin Exp $
 ;;;; *************************************************************************
 
 (in-package :cl-user)
@@ -43,23 +43,23 @@
       ;; Test against AllegroCL built-in routines
       #+allegro
       (progn
-      (test integer (excl:base64-string-to-integer
-			       (integer-to-base64-string integer :columns columns)))
-      (test integer (base64-string-to-integer
-			       (excl:integer-to-base64-string integer)))
-      (test (string-to-base64-string string :columns columns)
-	    (excl:usb8-array-to-base64-string usb8
-					      (if (zerop columns)
-						  nil
-						  columns))
-	    :test #'string=)
-      (test string (base64-string-to-string
-		    (excl:usb8-array-to-base64-string
-		     usb8
-		     (if (zerop columns)
-			 nil
-			 columns)))
-	    :test #'string=)))))
+	(test integer (excl:base64-string-to-integer
+		       (integer-to-base64-string integer :columns columns)))
+	(test integer (base64-string-to-integer
+		       (excl:integer-to-base64-string integer)))
+	(test (string-to-base64-string string :columns columns)
+	      (excl:usb8-array-to-base64-string usb8
+						(if (zerop columns)
+						    nil
+						    columns))
+	      :test #'string=)
+	(test string (base64-string-to-string
+		      (excl:usb8-array-to-base64-string
+		       usb8
+		       (if (zerop columns)
+			   nil
+			   columns)))
+	      :test #'string=)))))
   t)
 
 
@@ -69,8 +69,10 @@
 	 (int 12345678901234567890)
 	 (n 50000))
     (time-iterations n (integer-to-base64-string int))
+    #+allegro
     (time-iterations n (excl:integer-to-base64-string int))
     (time-iterations n (string-to-base64-string str))
+    #+allegro
     (time-iterations n (excl:usb8-array-to-base64-string usb8))))
 
 (export 'test-base64)      
