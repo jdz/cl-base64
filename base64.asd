@@ -7,7 +7,7 @@
 ;;;; Programmer:    Kevin M. Rosenberg
 ;;;; Date Started:  Dec 2002
 ;;;;
-;;;; $Id: base64.asd,v 1.16 2003/04/15 16:08:21 kevin Exp $
+;;;; $Id: base64.asd,v 1.17 2003/04/15 16:09:50 kevin Exp $
 ;;;; *************************************************************************
 
 (in-package :asdf)
@@ -39,5 +39,5 @@
    ))
 
 (defmethod perform ((o test-op) (c (eql (find-system :base64))))
-  (or (funcall (intern (symbol-name #:test-base64) (find-package 'base64)))
+  (or (funcall (intern (symbol-name '#:test-base64) (find-package 'base64)))
       (error "test-op failed")))
