@@ -14,7 +14,7 @@
 ;;;; Copyright 2002-2003 Kevin M. Rosenberg
 ;;;; Permission to use with BSD-style license included in the COPYING file
 ;;;;
-;;;; $Id: base64.lisp,v 1.2 2002/12/29 06:11:24 kevin Exp $
+;;;; $Id: src.lisp,v 1.1 2002/12/29 06:14:49 kevin Exp $
 
 (defpackage #:base64
   (:use #:cl)
