@@ -14,7 +14,7 @@
 ;;;; Copyright 2002-2003 Kevin M. Rosenberg
 ;;;; Permission to use with BSD-style license included in the COPYING file
 ;;;;
-;;;; $Id: src.lisp,v 1.1 2002/12/29 06:14:49 kevin Exp $
+;;;; $Id: src.lisp,v 1.2 2002/12/29 07:02:43 kevin Exp $
 
 (defpackage #:base64
   (:use #:cl)
@@ -218,10 +218,9 @@
 	 do
 	   (cond
 	     ((char= char pad)
-	      (setq value (the fixnum (ash value -2))))
+	      (setq value (ash value -2)))
 	     ((minusp svalue)
 	      (warn "Bad character ~W in base64 decode" char))
 	     (t
-	      (setq value (the fixnum
-			    (+ svalue (the fixnum (ash value 6))))))))
+	      (setq value (+ svalue (ash value 6))))))
       value)))
