@@ -44,7 +44,6 @@ install: build
 	dh_installdirs $(clc-systems) $(clc-base64)
 	dh_install *.asd $(shell echo *.lisp) $(clc-base64)
 	dh_link $(clc-base64)/base64.asd $(clc-systems)/base64.asd
-	dh_link $(clc-base64)/base64-test.asd $(clc-systems)/base64-test.asd
 
 # Build architecture-independent files here.
 binary-indep: build install

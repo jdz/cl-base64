@@ -7,15 +7,20 @@
 ;;;; Programmer:    Kevin M. Rosenberg
 ;;;; Date Started:  Dec 2002
 ;;;;
-;;;; $Id: base64.asd,v 1.3 2003/01/12 20:25:26 kevin Exp $
+;;;; $Id: base64.asd,v 1.4 2003/04/15 15:34:43 kevin Exp $
 ;;;; *************************************************************************
 
 (in-package :asdf)
 
+(cl:defpackage #:base64-system
+    (:use #:asdf #:cl))
+(cl:in-package #:base64-system)
+
+
 (defsystem :base64
   :name "cl-base64"
-  :author "Kevin M. Rosenberg based on code by Juri Pakaste"
-  :version "1.0"
+  :author "Kevin M. Rosenberg based on initial code by Juri Pakaste"
+  :version "3.1"
   :maintainer "Kevin M. Rosenberg <kmr@debian.org>"
   :licence "BSD-style"
   :description "Base64 encoding and decoding with URI support."
@@ -28,3 +33,7 @@
    (:file "encode" :depends-on ("package"))
    (:file "decode" :depends-on ("package"))
    ))
+
+(defmethod ((o test-op) (c (eql (find-system :base64))))
+  (or (load (compile-file "base64-tests.lisp"))
+         (error "test-op failed")))
