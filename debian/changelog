@@ -1,4 +1,4 @@
-cl-base64 (2.1.0-2) unstable; urgency=low
+cl-base64 (2.1.0-1) unstable; urgency=low
 
   * Fix broken string-to-base64
 
