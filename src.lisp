@@ -14,7 +14,7 @@
 ;;;; Copyright 2002-2003 Kevin M. Rosenberg
 ;;;; Permission to use with BSD-style license included in the COPYING file
 ;;;;
-;;;; $Id: src.lisp,v 1.3 2003/01/04 06:13:53 kevin Exp $
+;;;; $Id: src.lisp,v 1.4 2003/01/04 08:27:41 kevin Exp $
 
 (defpackage #:base64
   (:use #:cl)
@@ -106,9 +106,10 @@ with a #\Newline."
 	   (num-breaks (if (plusp num-lines)
 			   (1- num-lines)
 			   0))
-	   (strlen (+ padded-length num-breaks))
-	   (result (unless stream
-		     (make-string strlen)))
+	   (strlen (if stream
+		       0
+		       (+ padded-length num-breaks)))
+	   (result (make-string strlen))
 	   (col (if (plusp columns)
 		    0
 		    (1+ padded-length)))
@@ -118,18 +119,19 @@ with a #\Newline."
       (labels ((output-char (ch)
 		 (when (= col columns)
 		   (if stream
-		       (write #\Newline stream)
+		       (write-char #\Newline stream)
 		       (progn
 			 (setf (schar result ioutput) #\Newline)
 			 (incf ioutput)))
 		   (setq col 0))
 		 (incf col)
 		 (if stream
-		     (write ch stream)
+		     (write-char ch stream)
 		     (progn
 		       (setf (schar result ioutput) ch)
 		       (incf ioutput))))
 	     (output-group (svalue chars)
+	       (declare (fixnum svalue chars))
 	       (output-char
 		(schar encode-table
 		       (the fixnum
@@ -155,7 +157,7 @@ with a #\Newline."
 		   (output-char pad))))
 	(do ((igroup 0 (1+ igroup))
 	     (isource 0 (+ isource 3))
-	     svalue)
+	     (svalue 0))
 	    ((= igroup complete-group-count)
 	     (case remainder
 	       (2
