@@ -1,3 +1,9 @@
+cl-base64 (3.3-1) unstable; urgency=low
+
+  * Rework test loading
+
+ -- Kevin M. Rosenberg <kmr@debian.org>  Sun, 24 Aug 2003 13:40:03 -0600
+
 cl-base64 (3.2.1-1) unstable; urgency=low
 
   * New upstream
