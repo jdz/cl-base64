@@ -7,13 +7,10 @@
 ;;;; Programmer:    Kevin M. Rosenberg
 ;;;; Date Started:  Dec 2002
 ;;;;
-;;;; $Id: base64.asd,v 1.19 2003/04/15 16:21:43 kevin Exp $
+;;;; $Id: base64.asd,v 1.20 2003/05/06 16:19:51 kevin Exp $
 ;;;; *************************************************************************
 
-(in-package :asdf)
-
-(cl:defpackage #:base64-system
-    (:use #:asdf #:cl))
+(cl:defpackage #:base64-system (:use #:asdf #:cl))
 (cl:in-package #:base64-system)
 
 
@@ -25,9 +22,6 @@
   :licence "BSD-style"
   :description "Base64 encoding and decoding with URI support."
   
-  :perform (load-op :after (op base64)
-	    (pushnew :base64 cl:*features*))
-
   ;; depends-on only needed for test-op
   :depends-on (:kmrcl) 
   

@@ -7,7 +7,7 @@
 ;;;; Programmer:    Kevin M. Rosenberg
 ;;;; Date Started:  Dec 2002
 ;;;;
-;;;; $Id: encode.lisp,v 1.5 2003/01/14 11:59:44 kevin Exp $
+;;;; $Id: encode.lisp,v 1.6 2003/05/06 16:21:06 kevin Exp $
 ;;;;
 ;;;; This file implements the Base64 transfer encoding algorithm as
 ;;;; defined in RFC 1521 by Borensten & Freed, September 1993.
@@ -19,8 +19,6 @@
 ;;;; Permission to use with BSD-style license included in the COPYING file
 ;;;; *************************************************************************
 
-(declaim (optimize (debug 3) (speed 3) (safety 1) (compilation-speed 0)))
-
 ;;;; Extended by Kevin M. Rosenberg <kevin@rosenberg.net>:
 ;;;;   - .asd file
 ;;;;   - numerous speed optimizations
@@ -28,9 +26,12 @@
 ;;;;   - Renamed functions now that supporting integer conversions
 ;;;;   - URI-compatible encoding using :uri key
 ;;;;
-;;;; $Id: encode.lisp,v 1.5 2003/01/14 11:59:44 kevin Exp $
+;;;; $Id: encode.lisp,v 1.6 2003/05/06 16:21:06 kevin Exp $
 
 (in-package #:cl-base64)
+
+(eval-when (:compile-toplevel)
+  (declaim (optimize (space 0) (speed 3) (safety 1) (compilation-speed 0))))
 
 
 (defun round-next-multiple (x n)
