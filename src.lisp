@@ -14,7 +14,7 @@
 ;;;; Copyright 2002-2003 Kevin M. Rosenberg
 ;;;; Permission to use with BSD-style license included in the COPYING file
 ;;;;
-;;;; $Id: src.lisp,v 1.5 2003/01/04 08:33:13 kevin Exp $
+;;;; $Id: src.lisp,v 1.6 2003/01/04 13:43:27 kevin Exp $
 
 (defpackage #:base64
   (:use #:cl)
@@ -98,8 +98,7 @@ with a #\Newline."
     (let* ((string-length (length string))
 	   (complete-group-count (truncate string-length 3))
 	   (remainder (nth-value 1 (truncate string-length 3)))
-	   (padded-length (+ remainder
-			     (* 4 complete-group-count)))
+	   (padded-length (* 4 (truncate (+ string-length 2) 3)))
 	   (num-lines (if (plusp columns)
 			  (truncate (+ padded-length (1- columns)) columns)
 			  0))
@@ -148,18 +147,18 @@ with a #\Newline."
 			   (the fixnum
 			     (logand #x3f
 				     (the fixnum (ash svalue -6))))))
-		   (output-char pad))
+		 (output-char pad))
 	       (if (> chars 3)
 		   (output-char
 		    (schar encode-table
 			   (the fixnum
 			     (logand #x3f svalue))))
-		   (output-char pad))))
+		 (output-char pad))))
 	(do ((igroup 0 (1+ igroup))
 	     (isource 0 (+ isource 3)))
 	    ((= igroup complete-group-count)
-	     (case remainder
-	       (2
+	     (cond
+	       ((= remainder 2)
 		(output-group
 		 (the fixnum
 		   (+
@@ -170,10 +169,10 @@ with a #\Newline."
 		      (ash (char-code (the character
 					(char string (1+ isource)))) 8))))
 		 3))
-	       (1
+	       ((= remainder 1)
 		(output-group
 		 (the fixnum
-		   (char-code (the character (char string isource))))
+		   (ash (char-code (the character (char string isource))) 16))
 		 2)))
 	     result)
 	  (declare (fixnum igroup isource))
