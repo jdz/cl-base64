@@ -7,7 +7,7 @@
 ;;;; Programmer:    Kevin M. Rosenberg
 ;;;; Date Started:  Jan 2003
 ;;;;
-;;;; $Id: base64-tests.lisp,v 1.3 2003/04/15 15:51:03 kevin Exp $
+;;;; $Id: base64-tests.lisp,v 1.4 2003/04/15 15:53:38 kevin Exp $
 ;;;; *************************************************************************
 
 (in-package :cl-user)
@@ -59,7 +59,8 @@
 		     (if (zerop columns)
 			 nil
 			 columns)))
-	    :test #'string=))))))
+	    :test #'string=)))))
+  t)
 
 
 (defun time-routines ()
@@ -73,4 +74,4 @@
     (time-iterations n (excl:usb8-array-to-base64-string usb8))))
 
       
-(test-base64)
+;;(test-base64)

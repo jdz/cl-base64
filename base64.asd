@@ -7,7 +7,7 @@
 ;;;; Programmer:    Kevin M. Rosenberg
 ;;;; Date Started:  Dec 2002
 ;;;;
-;;;; $Id: base64.asd,v 1.9 2003/04/15 15:51:03 kevin Exp $
+;;;; $Id: base64.asd,v 1.10 2003/04/15 15:53:38 kevin Exp $
 ;;;; *************************************************************************
 
 (in-package :asdf)
@@ -35,8 +35,9 @@
   ((:file "package")
    (:file "encode" :depends-on ("package"))
    (:file "decode" :depends-on ("package"))
+   (:file "tests-base64" :depends-on ("encode" "decode"))
    ))
 
 (defmethod perform ((o test-op) (c (eql (find-system :base64))))
-  (or (load "base64-tests.lisp")
+  (or (test-base64)
       (error "test-op failed")))
