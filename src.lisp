@@ -14,12 +14,13 @@
 ;;;; Copyright 2002-2003 Kevin M. Rosenberg
 ;;;; Permission to use with BSD-style license included in the COPYING file
 ;;;;
-;;;; $Id: src.lisp,v 1.2 2002/12/29 07:02:43 kevin Exp $
+;;;; $Id: src.lisp,v 1.3 2003/01/04 06:13:53 kevin Exp $
 
 (defpackage #:base64
   (:use #:cl)
   (:export #:base64-to-string #:base64-to-integer
 	   #:string-to-base64 #:integer-to-base64))
+
 
 (in-package #:base64)
 
@@ -60,60 +61,11 @@
   (declaim (type character *pad-char* *uri-pad-char*))
   )
 
-(defun string-to-base64 (string &key (uri nil))
-  "Encode a string array to base64."
-  (declare (string string)
-	   (optimize (speed 3)))
-  (let ((pad (if uri *uri-pad-char* *pad-char*))
-	(encode-table (if uri *uri-encode-table* *encode-table*)))
-    (declare (simple-string encode-table)
-	     (character pad))
-    (let* ((string-length (length string))
-	   (result (make-string
-		    (* 4 (truncate (/ (+ 2 string-length) 3))))))
-      (declare (fixnum string-length)
-	       (simple-string result))
-      (do ((sidx 0 (the fixnum (+ sidx 3)))
-	   (didx 0 (the fixnum (+ didx 4)))
-	   (chars 2 2)
-	   (value 0 0))
-	  ((>= sidx string-length) t)
-	(declare (fixnum sidx didx chars value))
-	(setf value (ash (logand #xFF (char-code (char string sidx))) 8))
-	(dotimes (n 2)
-	  (declare (fixnum n))
-	  (when (< (the fixnum (+ sidx n 1)) string-length)
-	    (setf value
-		  (logior value
-			  (the fixnum
-			    (logand #xFF
-				    (the fixnum
-				      (char-code (char string
-							(the fixnum
-							  (+ sidx n 1)))))))))
-	    (incf chars))
-	  (when (zerop n)
-	    (setf value (the fixnum (ash value 8)))))
-	(setf (schar result (the fixnum (+ didx 3)))
-	      (if (> chars 3)
-		  (schar encode-table (logand value #x3F))
-		  pad))
-	(setf value (the fixnum (ash value -6)))
-	(setf (schar result (the fixnum (+ didx 2)))
-	      (if (> chars 2)
-		  (schar encode-table (logand value #x3F))
-		  pad))
-	(setf value (the fixnum (ash value -6)))
-	(setf (schar result (the fixnum (1+ didx)))
-	      (schar encode-table (logand value #x3F)))
-	(setf value (the fixnum (ash value -6)))
-	(setf (schar result didx)
-	      (schar encode-table (logand value #x3F))))
-      result)))
 
+;;; Utilities
 
 (defun round-next-multiple (x n)
-  "Round x up to the next highest multiple of n"
+  "Round x up to the next highest multiple of n."
   (declare (fixnum n)
 	   (optimize (speed 3)))
   (let ((remainder (mod x n)))
@@ -122,38 +74,239 @@
 	x
 	(the fixnum (+ x (the fixnum (- n remainder)))))))
 
-(defun integer-to-base64 (input &key (uri nil))
-  "Encode an integer to base64 format."
-  (declare (integer input)
+(declaim (inline whitespace-p))
+(defun whitespace-p (c)
+  "Returns T for a whitespace character."
+  (or (char= c #\Newline) (char= c #\Linefeed)
+      (char= c #\Return) (char= c #\Space)
+      (char= c #\Tab)))
+
+
+;; Encode routines
+
+(defun string-to-base64 (string &key (uri nil) (columns 0) (stream nil))
+  "Encode a string array to base64. If columns is > 0, designates
+maximum number of columns in a line and the string will be terminated
+with a #\Newline."
+  (declare (string string)
+	   (fixnum columns)
 	   (optimize (speed 3)))
   (let ((pad (if uri *uri-pad-char* *pad-char*))
 	(encode-table (if uri *uri-encode-table* *encode-table*)))
     (declare (simple-string encode-table)
 	     (character pad))
-    (do* ((input-bits (integer-length input))
-	  (byte-bits (round-next-multiple input-bits 8))
-	  (padded-bits (round-next-multiple byte-bits 6))
-	  (remainder-padding (mod padded-bits 24))
-	  (padding-bits (if (zerop remainder-padding)
-			    0
-			    (- 24 remainder-padding)))
-	  (strlen (/ (+ padded-bits padding-bits) 6))
-	  (padding-chars (/ padding-bits 6))
-	  (nonpad-chars (- strlen padding-chars))
-	  (last-nonpad-char (1- nonpad-chars))
-	  (str (make-string strlen))
-	  (strpos 0 (1+ strpos))
-	  (int (ash input (/ padding-bits 3)) (ash int -6))
-	  (6bit-value (logand int #x3f) (logand int #x3f)))
-	 ((= strpos nonpad-chars)
-	  (dotimes (ipad padding-chars)
-	    (setf (schar str strpos) pad)
-	    (incf strpos))
-	  str)
-      (declare (fixnum 6bit-value strpos strlen last-nonpad-char)
-	       (integer int))
-      (setf (schar str (the fixnum (- last-nonpad-char strpos)))
-	    (schar encode-table 6bit-value)))))
+    (let* ((string-length (length string))
+	   (complete-group-count (truncate string-length 3))
+	   (remainder (nth-value 1 (truncate string-length 3)))
+	   (padded-length (+ remainder
+			     (* 4 complete-group-count)))
+	   (num-lines (if (plusp columns)
+			  (truncate (+ padded-length (1- columns)) columns)
+			  0))
+	   (num-breaks (if (plusp num-lines)
+			   (1- num-lines)
+			   0))
+	   (strlen (+ padded-length num-breaks))
+	   (result (unless stream
+		     (make-string strlen)))
+	   (col (if (plusp columns)
+		    0
+		    (1+ padded-length)))
+	   (ioutput 0))
+      (declare (fixnum string-length padded-length col ioutput)
+	       (simple-string result))
+      (labels ((output-char (ch)
+		 (when (= col columns)
+		   (if stream
+		       (write #\Newline stream)
+		       (progn
+			 (setf (schar result ioutput) #\Newline)
+			 (incf ioutput)))
+		   (setq col 0))
+		 (incf col)
+		 (if stream
+		     (write ch stream)
+		     (progn
+		       (setf (schar result ioutput) ch)
+		       (incf ioutput))))
+	     (output-group (svalue chars)
+	       (output-char
+		(schar encode-table
+		       (the fixnum
+			 (logand #x3f
+				 (the fixnum (ash svalue -18))))))
+	       (output-char
+		(schar encode-table
+		       (the fixnum
+			 (logand #x3f
+				 (the fixnum (ash svalue -12))))))
+	       (if (> chars 2)
+		   (output-char
+		    (schar encode-table
+			   (the fixnum
+			     (logand #x3f
+				     (the fixnum (ash svalue -6))))))
+		   (output-char pad))
+	       (if (> chars 3)
+		   (output-char
+		    (schar encode-table
+			   (the fixnum
+			     (logand #x3f svalue))))
+		   (output-char pad))))
+	(do ((igroup 0 (1+ igroup))
+	     (isource 0 (+ isource 3))
+	     svalue)
+	    ((= igroup complete-group-count)
+	     (case remainder
+	       (2
+		(setq svalue
+		      (the fixnum
+			(+
+			 (the fixnum
+			   (ash (char-code (the character
+					     (char string isource))) 16))
+			 (the fixnum
+			   (ash (char-code (the character
+					     (char string (1+ isource)))) 8)))))
+		(output-group svalue 3))
+	       (1
+		(setq svalue
+		      (the fixnum
+			(char-code (the character
+				     (char string isource)))))
+		(output-group svalue 2)))
+	     result)
+	  (declare (fixnum igroup isource svalue))
+	  (setq svalue
+		(the fixnum
+		  (+
+		   (the fixnum
+		     (ash (char-code (the character
+				       (char string isource))) 16))
+		   (the fixnum
+		     (ash (char-code (the character
+				       (char string (1+ isource)))) 8))
+		   (the fixnum
+		     (char-code (the character
+				  (char string (+ 2 isource))))))))
+	  (output-group svalue 4))))))
+  
+  
+(defun integer-to-base64 (input &key (uri nil) (columns 0) (stream nil))
+  (if stream
+      (integer-to-base64-stream input stream :uri uri :columns columns)
+      (integer-to-base64-string input :uri uri :columns columns)))
+
+(defun integer-to-base64-string (input &key (uri nil) (columns 0))
+  "Encode an integer to base64 format."
+  (declare (integer input)
+	   (fixnum columns)
+	   (optimize (speed 3)))
+  (let ((pad (if uri *uri-pad-char* *pad-char*))
+	(encode-table (if uri *uri-encode-table* *encode-table*)))
+    (declare (simple-string encode-table)
+	     (character pad))
+    (let* ((input-bits (integer-length input))
+	   (byte-bits (round-next-multiple input-bits 8))
+	   (padded-bits (round-next-multiple byte-bits 6))
+	   (remainder-padding (mod padded-bits 24))
+	   (padding-bits (if (zerop remainder-padding)
+			     0
+			     (- 24 remainder-padding)))
+	   (padding-chars (/ padding-bits 6))
+	   (padded-length (/ (+ padded-bits padding-bits) 6))
+	   (last-line-len (if (plusp columns)
+			      (- padded-length (* columns
+						  (truncate
+						   padded-length columns)))
+			      0))
+	   (num-lines (if (plusp columns)
+			  (truncate (+ padded-length (1- columns)) columns)
+			  0))
+	   (num-breaks (if (plusp num-lines)
+			   (1- num-lines)
+			   0))
+	   (strlen (+ padded-length num-breaks))
+	   (last-char (1- strlen))
+	   (str (make-string strlen))
+	   (col (if (zerop last-line-len)
+		    (1- columns)
+		    (1- last-line-len))))
+      (declare (fixnum padded-length num-lines col last-char
+		       padding-chars last-line-len))
+      (unless (plusp columns)
+	(setq col -1)) ;; set to flag to optimize in loop
+      
+      (dotimes (i padding-chars)
+	(declare (fixnum i))
+	(setf (schar str (the fixnum (- last-char i))) pad))
+
+      (do* ((strpos (- last-char padding-chars) (1- strpos))
+	    (int (ash input (/ padding-bits 3))))
+	   ((minusp strpos)
+	    str)
+	(declare (fixnum strpos) (integer int))
+	(cond
+	  ((zerop col)
+	   (setf (schar str strpos) #\Newline)
+	   (setq col columns))
+	  (t
+	   (setf (schar str strpos)
+		 (schar encode-table (the fixnum (logand int #x3f))))
+	   (setq int (ash int -6))
+	   (decf col)))))))
+
+(defun integer-to-base64-stream (input stream &key (uri nil) (columns 0))
+  "Encode an integer to base64 format."
+  (declare (integer input)
+	   (fixnum columns)
+	   (optimize (speed 3)))
+  (let ((pad (if uri *uri-pad-char* *pad-char*))
+	(encode-table (if uri *uri-encode-table* *encode-table*)))
+    (declare (simple-string encode-table)
+	     (character pad))
+    (let* ((input-bits (integer-length input))
+	   (byte-bits (round-next-multiple input-bits 8))
+	   (padded-bits (round-next-multiple byte-bits 6))
+	   (remainder-padding (mod padded-bits 24))
+	   (padding-bits (if (zerop remainder-padding)
+			     0
+			     (- 24 remainder-padding)))
+	   (padding-chars (/ padding-bits 6))
+	   (padded-length (/ (+ padded-bits padding-bits) 6))
+	   (strlen padded-length)
+	   (nonpad-chars (- strlen padding-chars))
+	   (last-nonpad-char (1- nonpad-chars))
+	   (str (make-string strlen)))
+      (declare (fixnum padded-length last-nonpad-char))
+      (do* ((strpos 0 (1+ strpos))
+	    (int (ash input (/ padding-bits 3)) (ash int -6))
+	    (6bit-value (logand int #x3f) (logand int #x3f)))
+	   ((= strpos nonpad-chars)
+	    (let ((col 0))
+	      (declare (fixnum col))
+	      (dotimes (i nonpad-chars)
+		(declare (fixnum i))
+		(write-char (schar str i) stream)
+		(when (plusp columns)
+		  (incf col)
+		  (when (= col columns)
+		    (write-char #\Newline stream)
+		    (setq col 0))))
+	      (dotimes (ipad padding-chars)
+		(declare (fixnum ipad))
+		(write-char pad stream)
+		(when (plusp columns)
+		  (incf col)
+		  (when (= col columns)
+		    (write-char #\Newline stream)
+		    (setq col 0)))))
+	    stream)
+	(declare (fixnum 6bit-value strpos)
+		 (integer int))
+	(setf (schar str (- last-nonpad-char strpos))
+	      (schar encode-table 6bit-value))
+	))))
 
 ;;; Decoding
 
@@ -165,7 +318,7 @@
 	(decode-table (if uri *uri-decode-table* *decode-table*)))
     (declare (type decode-table decode-table)
 	     (character pad))
-    (let ((result (make-string (* 3 (truncate (/ (length string) 4)))))
+    (let ((result (make-string (* 3 (truncate (length string) 4))))
 	  (ridx 0))
       (declare (simple-string result)
 	       (fixnum ridx))
@@ -176,13 +329,7 @@
 	 with bitcount of-type fixnum = 0
 	 do
 	   (cond
-	     ((char= char pad)
-	      ;; Could add checks to make sure padding is correct
-	      ;; Currently, padding is ignored
-	      )
-	     ((minusp svalue)
-	      (warn "Bad character ~W in base64 decode" char))
-	     (t
+	     ((>= svalue 0)
 	      (setf bitstore (logior
 			      (the fixnum (ash bitstore 6))
 			      svalue))
@@ -197,7 +344,17 @@
 					   (the fixnum (- bitcount))))
 				    #xFF))))
 		(incf ridx)
-		(setf bitstore (the fixnum (logand bitstore #xFF)))))))
+		(setf bitstore (the fixnum (logand bitstore #xFF)))))
+	     ((char= char pad)
+	      ;; Could add checks to make sure padding is correct
+	      ;; Currently, padding is ignored
+	      )
+	     ((whitespace-p char)
+	      ;; Ignore whitespace
+	      )
+	     ((minusp svalue)
+	      (warn "Bad character ~W in base64 decode" char))
+))
       (subseq result 0 ridx))))
   
   
@@ -217,10 +374,13 @@
 	   (aref decode-table (the fixnum (char-code char)))
 	 do
 	   (cond
+	     ((>= svalue 0)
+	      (setq value (+ svalue (ash value 6))))
 	     ((char= char pad)
 	      (setq value (ash value -2)))
+	     ((whitespace-p char)
+	      ; ignore whitespace
+	      )
 	     ((minusp svalue)
-	      (warn "Bad character ~W in base64 decode" char))
-	     (t
-	      (setq value (+ svalue (ash value 6))))))
+	      (warn "Bad character ~W in base64 decode" char))))
       value)))
