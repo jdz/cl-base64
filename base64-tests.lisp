@@ -7,7 +7,7 @@
 ;;;; Programmer:    Kevin M. Rosenberg
 ;;;; Date Started:  Jan 2003
 ;;;;
-;;;; $Id: base64-tests.lisp,v 1.2 2003/04/15 15:44:07 kevin Exp $
+;;;; $Id: base64-tests.lisp,v 1.3 2003/04/15 15:51:03 kevin Exp $
 ;;;; *************************************************************************
 
 (in-package :cl-user)
@@ -73,4 +73,4 @@
     (time-iterations n (excl:usb8-array-to-base64-string usb8))))
 
       
-;;#+run-test (test-base64)
+(test-base64)
