@@ -1,3 +1,9 @@
+cl-base64 (3.2.1-1) unstable; urgency=low
+
+  * New upstream
+
+ -- Kevin M. Rosenberg <kmr@debian.org>  Thu, 12 Jun 2003 08:04:55 -0600
+
 cl-base64 (3.2-1) unstable; urgency=low
 
   * Improve .asd file

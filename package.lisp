@@ -7,11 +7,9 @@
 ;;;; Programmer:    Kevin M. Rosenberg
 ;;;; Date Started:  Dec 2002
 ;;;;
-;;;; $Id: package.lisp,v 1.4 2003/04/15 16:05:39 kevin Exp $
+;;;; $Id: package.lisp,v 1.5 2003/06/12 14:05:11 kevin Exp $
 ;;;;
 ;;;; *************************************************************************
-
-(declaim (optimize (debug 3) (speed 3) (safety 1) (compilation-speed 0)))
 
 (defpackage #:cl-base64
   (:nicknames #:base64)

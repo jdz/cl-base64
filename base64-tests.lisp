@@ -7,12 +7,13 @@
 ;;;; Programmer:    Kevin M. Rosenberg
 ;;;; Date Started:  Jan 2003
 ;;;;
-;;;; $Id: base64-tests.lisp,v 1.13 2003/05/06 16:19:51 kevin Exp $
+;;;; $Id: base64-tests.lisp,v 1.14 2003/06/12 14:05:11 kevin Exp $
 ;;;; *************************************************************************
 
-(in-package :cl-user)
-
-(defpackage #:base64-test  (:use #:cl #:kmrcl #:base64))
+(in-package #:cl-user)
+(defpackage #:base64-test
+  (:use #:cl #:kmrcl #:base64)
+  (:export #:test-base64))
 (in-package #:base64-test)
 
 (defun test-base64 ()
@@ -71,5 +72,4 @@
     #+allegro
     (time-iterations n (excl:usb8-array-to-base64-string usb8))))
 
-(export 'test-base64)      
 ;;(test-base64)

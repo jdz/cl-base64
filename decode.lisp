@@ -7,7 +7,7 @@
 ;;;; Programmer:    Kevin M. Rosenberg
 ;;;; Date Started:  Dec 2002
 ;;;;
-;;;; $Id: decode.lisp,v 1.5 2003/05/06 16:21:06 kevin Exp $
+;;;; $Id: decode.lisp,v 1.6 2003/06/12 14:05:11 kevin Exp $
 ;;;;
 ;;;; This file implements the Base64 transfer encoding algorithm as
 ;;;; defined in RFC 1521 by Borensten & Freed, September 1993.
@@ -20,10 +20,6 @@
 ;;;; *************************************************************************
 
 (in-package #:cl-base64)
-
-(eval-when (:compile-toplevel)
-  (declaim (optimize (space 0) (speed 3) (safety 1) (compilation-speed 0))))
-
 
 (declaim (inline whitespace-p))
 (defun whitespace-p (c)
@@ -39,13 +35,13 @@
 (defmacro def-base64-stream-to-* (output-type)
   `(defun ,(intern (concatenate 'string (symbol-name :base64-stream-to-)
 				(symbol-name output-type)))
-       (input &key (uri nil)
+    (input &key (uri nil)
 	,@(when (eq output-type :stream)
 		'(stream)))
      ,(concatenate 'string "Decode base64 stream to " (string-downcase
 						       (symbol-name output-type)))
      (declare (stream input)
-	      (optimize (speed 3)))
+	      (optimize (speed 3) (space 0) (safety 0)))
      (let ((pad (if uri *uri-pad-char* *pad-char*))
 	   (decode-table (if uri *uri-decode-table* *decode-table*)))
        (declare (type decode-table decode-table)
@@ -124,13 +120,13 @@
 (defmacro def-base64-string-to-* (output-type)
   `(defun ,(intern (concatenate 'string (symbol-name :base64-string-to-)
 				(symbol-name output-type)))
-       (input &key (uri nil)
+    (input &key (uri nil)
 	,@(when (eq output-type :stream)
 		'(stream)))
      ,(concatenate 'string "Decode base64 string to " (string-downcase
 						       (symbol-name output-type)))
      (declare (string input)
-	      (optimize (speed 3)))
+	      (optimize (speed 3) (safety 0) (space 0)))
      (let ((pad (if uri *uri-pad-char* *pad-char*))
 	   (decode-table (if uri *uri-decode-table* *decode-table*)))
        (declare (type decode-table decode-table)
@@ -207,7 +203,7 @@
 (defun base64-string-to-integer (string &key (uri nil))
   "Decodes a base64 string to an integer"
   (declare (string string)
-	   (optimize (speed 3)))
+	   (optimize (speed 3) (safety 0) (space 0)))
   (let ((pad (if uri *uri-pad-char* *pad-char*))
 	(decode-table (if uri *uri-decode-table* *decode-table*)))
     (declare (type decode-table decode-table)
@@ -235,7 +231,7 @@
 (defun base64-stream-to-integer (stream &key (uri nil))
   "Decodes a base64 string to an integer"
   (declare (stream stream)
-	   (optimize (speed 3)))
+	   (optimize (speed 3) (space 0) (safety 0)))
   (let ((pad (if uri *uri-pad-char* *pad-char*))
 	(decode-table (if uri *uri-decode-table* *decode-table*)))
     (declare (type decode-table decode-table)

@@ -7,14 +7,15 @@
 ;;;; Programmer:    Kevin M. Rosenberg
 ;;;; Date Started:  Dec 2002
 ;;;;
-;;;; $Id: base64.asd,v 1.20 2003/05/06 16:19:51 kevin Exp $
+;;;; $Id: base64.asd,v 1.21 2003/06/12 14:05:11 kevin Exp $
 ;;;; *************************************************************************
 
-(cl:defpackage #:base64-system (:use #:asdf #:cl))
-(cl:in-package #:base64-system)
+(in-package #:cl-user)
+(defpackage #:base64-system (:use #:asdf #:cl))
+(in-package #:base64-system)
 
 
-(defsystem :base64
+(defsystem base64
   :name "cl-base64"
   :author "Kevin M. Rosenberg based on initial code by Juri Pakaste"
   :version "3.1"
@@ -32,6 +33,7 @@
    (:file "base64-tests" :depends-on ("encode" "decode"))
    ))
 
-(defmethod perform ((o test-op) (c (eql (find-system :base64))))
-  (or (funcall (intern (symbol-name '#:test-base64) (find-package 'base64-test)))
+(defmethod perform ((o test-op) (c (eql (find-system 'base64))))
+  (or (funcall (intern (symbol-name '#:test-base64)
+		       (find-package 'base64-test)))
       (error "test-op failed")))

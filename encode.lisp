@@ -7,7 +7,7 @@
 ;;;; Programmer:    Kevin M. Rosenberg
 ;;;; Date Started:  Dec 2002
 ;;;;
-;;;; $Id: encode.lisp,v 1.6 2003/05/06 16:21:06 kevin Exp $
+;;;; $Id: encode.lisp,v 1.7 2003/06/12 14:05:11 kevin Exp $
 ;;;;
 ;;;; This file implements the Base64 transfer encoding algorithm as
 ;;;; defined in RFC 1521 by Borensten & Freed, September 1993.
@@ -26,18 +26,14 @@
 ;;;;   - Renamed functions now that supporting integer conversions
 ;;;;   - URI-compatible encoding using :uri key
 ;;;;
-;;;; $Id: encode.lisp,v 1.6 2003/05/06 16:21:06 kevin Exp $
+;;;; $Id: encode.lisp,v 1.7 2003/06/12 14:05:11 kevin Exp $
 
 (in-package #:cl-base64)
-
-(eval-when (:compile-toplevel)
-  (declaim (optimize (space 0) (speed 3) (safety 1) (compilation-speed 0))))
-
 
 (defun round-next-multiple (x n)
   "Round x up to the next highest multiple of n."
   (declare (fixnum n)
-	   (optimize (speed 3)))
+	   (optimize (speed 3) (safety 0) (space 0)))
   (let ((remainder (mod x n)))
     (declare (fixnum remainder))
     (if (zerop remainder)
@@ -48,7 +44,7 @@
   `(defun ,(intern (concatenate 'string (symbol-name input-type)
 				(symbol-name :-to-base64-)
 				(symbol-name output-type)))
-       (input
+    (input
 	,@(when (eq output-type :stream)
 		'(output))
 	&key (uri nil) (columns 0))
@@ -61,7 +57,7 @@ with a #\Newline."
 		      (:usb8-array
 		       '((type (array (unsigned-byte 8) (*)) input))))
 	      (fixnum columns)
-	      (optimize (speed 3)))
+	      (optimize (speed 3) (safety 0) (space 0)))
      (let ((pad (if uri *uri-pad-char* *pad-char*))
 	   (encode-table (if uri *uri-encode-table* *encode-table*)))
        (declare (simple-string encode-table)
@@ -216,7 +212,7 @@ with a #\Newline."
   "Encode an integer to base64 format."
   (declare (integer input)
 	   (fixnum columns)
-	   (optimize (speed 3)))
+	   (optimize (speed 3) (space 0) (safety 0)))
   (let ((pad (if uri *uri-pad-char* *pad-char*))
 	(encode-table (if uri *uri-encode-table* *encode-table*)))
     (declare (simple-string encode-table)
@@ -275,7 +271,7 @@ with a #\Newline."
   "Encode an integer to base64 format."
   (declare (integer input)
 	   (fixnum columns)
-	   (optimize (speed 3)))
+	   (optimize (speed 3) (space 0) (safety 0)))
   (let ((pad (if uri *uri-pad-char* *pad-char*))
 	(encode-table (if uri *uri-encode-table* *encode-table*)))
     (declare (simple-string encode-table)
