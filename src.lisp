@@ -14,7 +14,7 @@
 ;;;; Copyright 2002-2003 Kevin M. Rosenberg
 ;;;; Permission to use with BSD-style license included in the COPYING file
 ;;;;
-;;;; $Id: src.lisp,v 1.4 2003/01/04 08:27:41 kevin Exp $
+;;;; $Id: src.lisp,v 1.5 2003/01/04 08:33:13 kevin Exp $
 
 (defpackage #:base64
   (:use #:cl)
@@ -156,43 +156,38 @@ with a #\Newline."
 			     (logand #x3f svalue))))
 		   (output-char pad))))
 	(do ((igroup 0 (1+ igroup))
-	     (isource 0 (+ isource 3))
-	     (svalue 0))
+	     (isource 0 (+ isource 3)))
 	    ((= igroup complete-group-count)
 	     (case remainder
 	       (2
-		(setq svalue
-		      (the fixnum
-			(+
-			 (the fixnum
-			   (ash (char-code (the character
-					     (char string isource))) 16))
-			 (the fixnum
-			   (ash (char-code (the character
-					     (char string (1+ isource)))) 8)))))
-		(output-group svalue 3))
+		(output-group
+		 (the fixnum
+		   (+
+		    (the fixnum
+		      (ash (char-code (the character
+					(char string isource))) 16))
+		    (the fixnum
+		      (ash (char-code (the character
+					(char string (1+ isource)))) 8))))
+		 3))
 	       (1
-		(setq svalue
-		      (the fixnum
-			(char-code (the character
-				     (char string isource)))))
-		(output-group svalue 2)))
+		(output-group
+		 (the fixnum
+		   (char-code (the character (char string isource))))
+		 2)))
 	     result)
-	  (declare (fixnum igroup isource svalue))
-	  (setq svalue
-		(the fixnum
-		  (+
-		   (the fixnum
-		     (ash (char-code (the character
-				       (char string isource))) 16))
-		   (the fixnum
-		     (ash (char-code (the character
-				       (char string (1+ isource)))) 8))
-		   (the fixnum
-		     (char-code (the character
-				  (char string (+ 2 isource))))))))
-	  (output-group svalue 4))))))
-  
+	  (declare (fixnum igroup isource))
+	  (output-group 
+	   (the fixnum
+	     (+
+	      (the fixnum
+		(ash (char-code (the character
+				  (char string isource))) 16))
+	      (the fixnum
+		(ash (char-code (the character (char string (1+ isource)))) 8))
+	      (the fixnum
+		(char-code (the character (char string (+ 2 isource)))))))
+	   4))))))
   
 (defun integer-to-base64 (input &key (uri nil) (columns 0) (stream nil))
   (if stream
