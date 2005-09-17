@@ -1,3 +1,9 @@
+cl-base64 (3.3.1-4) unstable; urgency=low
+
+  * New upstream URI
+
+ -- Kevin M. Rosenberg <kmr@debian.org>  Sat, 17 Sep 2005 15:34:55 -0600
+
 cl-base64 (3.3.1-3) unstable; urgency=low
 
   * Fix package name in postinst/prerm
