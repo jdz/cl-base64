@@ -1,3 +1,9 @@
+cl-base64 (3.3.2-1) unstable; urgency=low
+
+  * Depend on kmrcl only for test package
+
+ -- Kevin M. Rosenberg <kmr@debian.org>  Sun, 27 Aug 2006 12:23:37 -0600
+
 cl-base64 (3.3.1-5) unstable; urgency=low
 
   * Fix spelling mistake in package description (closes:363204)
