@@ -23,9 +23,6 @@
   :licence "BSD-style"
   :description "Base64 encoding and decoding with URI support."
   
-  ;; depends-on only needed for test-op
-  :depends-on (:kmrcl) 
-  
   :components
   ((:file "package")
    (:file "encode" :depends-on ("package"))
@@ -37,7 +34,8 @@
   (operate 'test-op 'cl-base64-tests :force t))
 
 (defsystem cl-base64-tests
-    :depends-on (cl-base64 ptester)
+    :depends-on (cl-base64 ptester kmrcl)
+  
     :components
     ((:file "tests")))
 
