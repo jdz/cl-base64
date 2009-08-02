@@ -1,4 +1,4 @@
-cl-base64 (3.3.2-2) unstable; urgency=low
+cl-base64 (3.3.3-1) unstable; urgency=low
 
   * New upstream
   * Convert to debhelper version 7
@@ -8,7 +8,7 @@ cl-base64 (3.3.2-2) unstable; urgency=low
   * debian/rules: Change to just architecture independent rules and DH7
   * debian/{prerm,postinst}: Remove paths from binary function
 
- -- Kevin M. Rosenberg <kmr@debian.org>  Sat, 01 Aug 2009 19:41:27 -0600
+ -- Kevin M. Rosenberg <kmr@debian.org>  Sat, 01 Aug 2009 23:19:43 -0600
 
 cl-base64 (3.3.2-1) unstable; urgency=low
 
