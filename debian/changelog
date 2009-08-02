@@ -1,3 +1,15 @@
+cl-base64 (3.3.2-2) unstable; urgency=low
+
+  * New upstream
+  * Convert to debhelper version 7
+  * debian/watch: New file
+  * debian/control: Change section to new lisp section. Add Vcs-Git
+  and Homepage fields.
+  * debian/rules: Change to just architecture independent rules and DH7
+  * debian/{prerm,postinst}: Remove paths from binary function
+
+ -- Kevin M. Rosenberg <kmr@debian.org>  Sat, 01 Aug 2009 19:41:27 -0600
+
 cl-base64 (3.3.2-1) unstable; urgency=low
 
   * Depend on kmrcl only for test package

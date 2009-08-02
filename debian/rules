@@ -3,19 +3,15 @@
 pkg	:= cl-base64
 debpkg  := cl-base64
 
-
 clc-source	:= usr/share/common-lisp/source
 clc-systems	:= usr/share/common-lisp/systems
 clc-base64	:= $(clc-source)/$(pkg)
 
 doc-dir		:= usr/share/doc/$(debpkg)
 
-
 configure: configure-stamp
 configure-stamp:
 	dh_testdir
-	# Add here commands to configure the package.
-
 	touch configure-stamp
 
 
@@ -23,45 +19,39 @@ build: build-stamp
 
 build-stamp: configure-stamp 
 	dh_testdir
-	# Add here commands to compile the package.
 	touch build-stamp
 
 clean:
 	dh_testdir
 	dh_testroot
 	rm -f build-stamp configure-stamp
-	# Add here commands to clean up after the build process.
 	rm -f debian/cl-base64.postinst.* debian/cl-base64.prerm.*
 	dh_clean
 
 install: build
 	dh_testdir
 	dh_testroot
-	dh_clean -k
-	# Add here commands to install the package into debian/cl-base64.
+	dh_prep
 	dh_installdirs $(clc-systems) $(clc-base64)
 	dh_install *.asd $(shell echo *.lisp) $(clc-base64)
 	dh_link $(clc-base64)/cl-base64.asd $(clc-systems)/cl-base64.asd
 
 # Build architecture-independent files here.
 binary-indep: build install
+	dh_testdir -i
+	dh_testroot -i
+	dh_installdocs -i
+	dh_installchangelogs -i
+	dh_strip -i
+	dh_compress -i
+	dh_fixperms -i
+	dh_installdeb -i
+	dh_gencontrol -i
+	dh_md5sums -i
+	dh_builddeb -i
 
-
-# Build architecture-dependent files here.
 binary-arch: build install
-	dh_testdir
-	dh_testroot
-	dh_installdocs
-	dh_installchangelogs
-	dh_strip
-	dh_compress
-	dh_fixperms
-	dh_installdeb
-	dh_shlibdeps
-	dh_gencontrol
-	dh_md5sums
-	dh_builddeb
 
 binary: binary-indep binary-arch
-.PHONY: build clean binary-indep binary-arch binary install configure
+.PHONY: build clean binary-indep binary install configure
 

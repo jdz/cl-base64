@@ -22,7 +22,6 @@
   :maintainer "Kevin M. Rosenberg <kmr@debian.org>"
   :licence "BSD-style"
   :description "Base64 encoding and decoding with URI support."
-  
   :components
   ((:file "package")
    (:file "encode" :depends-on ("package"))
@@ -35,7 +34,6 @@
 
 (defsystem cl-base64-tests
     :depends-on (cl-base64 ptester kmrcl)
-  
     :components
     ((:file "tests")))
 
