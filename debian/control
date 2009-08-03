@@ -2,6 +2,7 @@ Source: cl-base64
 Section: lisp
 Priority: optional
 Maintainer: Kevin M. Rosenberg <kmr@debian.org>
+Build-Depends-Indep: dh-lisp
 Build-Depends: debhelper (>= 7.0.0)
 Standards-Version: 3.8.2.0
 Vcs-Git: git://git.b9.com/cl-base64.git
@@ -9,7 +10,7 @@ Homepage: http://files.b9.com/cl-base64/
 
 Package: cl-base64
 Architecture: all
-Depends: common-lisp-controller (>= 3.47), cl-kmrcl
+Depends: ${misc:Depends}, cl-kmrcl
 Description: Common Lisp package to encode and decode base64 with URI support
  This package provides highly optimized base64 encoding and decoding.
  Besides conversion to and from strings, integer conversions are supported.
