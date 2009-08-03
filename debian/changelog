@@ -1,8 +1,9 @@
 cl-base64 (3.3.3-2) unstable; urgency=low
 
-  * Convert to dh-lisp
+  * Convert installation to dh-lisp
+  * control: Add Vcs-Browser field
 
- -- Kevin M. Rosenberg <kmr@debian.org>  Mon, 03 Aug 2009 10:21:24 -0600
+ -- Kevin M. Rosenberg <kmr@debian.org>  Mon, 03 Aug 2009 10:31:33 -0600
 
 cl-base64 (3.3.3-1) unstable; urgency=low
 

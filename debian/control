@@ -5,8 +5,9 @@ Maintainer: Kevin M. Rosenberg <kmr@debian.org>
 Build-Depends-Indep: dh-lisp
 Build-Depends: debhelper (>= 7.0.0)
 Standards-Version: 3.8.2.0
-Vcs-Git: git://git.b9.com/cl-base64.git
 Homepage: http://files.b9.com/cl-base64/
+Vcs-Git: git://git.b9.com/cl-base64.git
+Vcs-Browser: http://git.b9.com/?p=cl-base64.git
 
 Package: cl-base64
 Architecture: all
