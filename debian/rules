@@ -8,11 +8,11 @@ clc-systems	:= usr/share/common-lisp/systems
 clc-files	:= $(clc-source)/$(pkg)
 doc-dir		:= usr/share/doc/$(debpkg)
 
-build: build-indep build-dep
+build: build-indep build-arch
 
 build-indep:
 
-build-dep:
+build-arch:
 
 clean:
 	dh_testdir
