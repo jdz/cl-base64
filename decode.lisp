@@ -59,7 +59,7 @@
                           (:string
                            '((simple-string result)))
                           (:usb8-array
-                           '((type (simple-array (usigned-byte 8) (*)) result))))
+                           '((type (simple-array (unsigned-byte 8) (*)) result))))
                   (fixnum ridx))
          (do* ((bitstore 0)
                (bitcount 0)
