@@ -1,3 +1,4 @@
 #!/bin/bash -e
 
-dup cl-base64 -Ufiles.b9.com -D/home/ftp/cl-base64 -C"(umask 022; /home/kevin/bin/remove-old-versions cl-base64 latest)" -su $*
+dup cl-base64 -Ufiles.b9.com -D/home/ftp/cl-base64 -su \
+    -C"(umask 022; cd /srv/www/html/cl-base64; make install; find . -type d |xargs chmod go+rx; find . -type f | xargs chmod go+r)" $*
