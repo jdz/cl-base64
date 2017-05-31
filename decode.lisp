@@ -41,7 +41,7 @@
      ,(concatenate 'string "Decode base64 stream to " (string-downcase
                                                        (symbol-name output-type)))
      (declare (stream input)
-              (optimize (speed 3) (space 0) (safety 0)))
+              (optimize (speed 3) (space 0) (safety 1)))
      (let ((pad (if uri *uri-pad-char* *pad-char*))
            (decode-table (if uri *uri-decode-table* *decode-table*)))
        (declare (type decode-table decode-table)
@@ -126,7 +126,7 @@
      ,(concatenate 'string "Decode base64 string to " (string-downcase
                                                        (symbol-name output-type)))
      (declare (string input)
-              (optimize (speed 3) (safety 0) (space 0)))
+              (optimize (speed 3) (safety 1) (space 0)))
      (let ((pad (if uri *uri-pad-char* *pad-char*))
            (decode-table (if uri *uri-decode-table* *decode-table*)))
        (declare (type decode-table decode-table)
@@ -203,7 +203,7 @@
 (defun base64-string-to-integer (string &key (uri nil))
   "Decodes a base64 string to an integer"
   (declare (string string)
-           (optimize (speed 3) (safety 0) (space 0)))
+           (optimize (speed 3) (safety 1) (space 0)))
   (let ((pad (if uri *uri-pad-char* *pad-char*))
         (decode-table (if uri *uri-decode-table* *decode-table*)))
     (declare (type decode-table decode-table)
@@ -231,7 +231,7 @@
 (defun base64-stream-to-integer (stream &key (uri nil))
   "Decodes a base64 string to an integer"
   (declare (stream stream)
-           (optimize (speed 3) (space 0) (safety 0)))
+           (optimize (speed 3) (space 0) (safety 1)))
   (let ((pad (if uri *uri-pad-char* *pad-char*))
         (decode-table (if uri *uri-decode-table* *decode-table*)))
     (declare (type decode-table decode-table)

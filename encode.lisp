@@ -33,7 +33,7 @@
 (defun round-next-multiple (x n)
   "Round x up to the next highest multiple of n."
   (declare (fixnum n)
-           (optimize (speed 3) (safety 0) (space 0)))
+           (optimize (speed 3) (safety 1) (space 0)))
   (let ((remainder (mod x n)))
     (declare (fixnum remainder))
     (if (zerop remainder)
@@ -57,7 +57,7 @@ with a #\Newline."
                       (:usb8-array
                        '((type (array (unsigned-byte 8) (*)) input))))
               (fixnum columns)
-              (optimize (speed 3) (safety 0) (space 0)))
+              (optimize (speed 3) (safety 1) (space 0)))
      (let ((pad (if uri *uri-pad-char* *pad-char*))
            (encode-table (if uri *uri-encode-table* *encode-table*)))
        (declare (simple-string encode-table)
@@ -212,7 +212,7 @@ with a #\Newline."
   "Encode an integer to base64 format."
   (declare (integer input)
            (fixnum columns)
-           (optimize (speed 3) (space 0) (safety 0)))
+           (optimize (speed 3) (space 0) (safety 1)))
   (let ((pad (if uri *uri-pad-char* *pad-char*))
         (encode-table (if uri *uri-encode-table* *encode-table*)))
     (declare (simple-string encode-table)
@@ -271,7 +271,7 @@ with a #\Newline."
   "Encode an integer to base64 format."
   (declare (integer input)
            (fixnum columns)
-           (optimize (speed 3) (space 0) (safety 0)))
+           (optimize (speed 3) (space 0) (safety 1)))
   (let ((pad (if uri *uri-pad-char* *pad-char*))
         (encode-table (if uri *uri-encode-table* *encode-table*)))
     (declare (simple-string encode-table)
