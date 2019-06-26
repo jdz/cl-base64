@@ -31,12 +31,11 @@
            #:integer-to-base64-string
            #:integer-to-base64-stream
 
-           ;; For creating custom encode/decode tables
+           ;; For creating custom encode/decode tables.
+           #:make-decode-table
+           ;; What's the point of exporting these?
            #:*uri-encode-table*
            #:*uri-decode-table*
-           #:make-decode-table
-
-           #:test-base64
            ))
 
 (in-package #:cl-base64)
