@@ -49,22 +49,26 @@
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_")
 (declaim (type simple-string *uri-encode-table*))
 
-(deftype decode-table () '(simple-array fixnum (256)))
+(deftype decode-table () '(simple-array (signed-byte 8) (128)))
 
-(defun make-decode-table (encode-table)
-  (let ((dt (make-array 256 :adjustable nil :fill-pointer nil
-                        :element-type 'fixnum
-                        :initial-element -1)))
+(defun make-decode-table (encode-table pad-char
+                          &key (whitespace-chars
+                                '(#\Linefeed #\Return #\Space #\Tab)))
+  (let ((dt (make-array 128 :element-type '(signed-byte 8)
+                            :initial-element -1)))
     (declare (type decode-table dt))
-    (loop for char of-type character across encode-table
-       for index of-type fixnum from 0 below 64
-       do (setf (aref dt (the fixnum (char-code char))) index))
+    (loop for char across encode-table
+          for index upfrom 0
+          do (setf (aref dt (char-code char)) index))
+    (setf (aref dt (char-code pad-char)) -2)
+    (loop for char in whitespace-chars
+          do (setf (aref dt (char-code char)) -3))
     dt))
-
-(defvar *decode-table* (make-decode-table *encode-table*))
-
-(defvar *uri-decode-table* (make-decode-table *uri-encode-table*))
 
 (defvar *pad-char* #\=)
 (defvar *uri-pad-char* #\.)
 (declaim (type character *pad-char* *uri-pad-char*))
+
+(defvar *decode-table* (make-decode-table *encode-table* *pad-char*))
+
+(defvar *uri-decode-table* (make-decode-table *uri-encode-table* *uri-pad-char*))

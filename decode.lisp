@@ -21,12 +21,6 @@
 
 (in-package #:cl-base64)
 
-(declaim (inline whitespace-p))
-(defun whitespace-p (c)
-  "Returns T for a whitespace character."
-  (or (char= c #\Newline) (char= c #\Linefeed)
-      (char= c #\Return) (char= c #\Space)
-      (char= c #\Tab)))
 
 ;;; Decoding
 
@@ -40,10 +34,8 @@
                    (string-downcase (symbol-name output-type)))
      (declare (string input)
               (optimize (speed 3) (safety 1) (space 0)))
-     (let ((pad (if uri *uri-pad-char* *pad-char*))
-           (decode-table (if uri *uri-decode-table* *decode-table*)))
-       (declare (type decode-table decode-table)
-                (type character pad))
+     (let ((decode-table (if uri *uri-decode-table* *decode-table*)))
+       (declare (type decode-table decode-table))
        (let (,@(case output-type
                  (:string
                   '((result (make-string (* 3 (truncate (length input) 4))))))
@@ -64,7 +56,16 @@
            for svalue of-type fixnum = (aref decode-table
                                              (the fixnum (char-code char)))
            do (cond
-                ((>= svalue 0)
+                ((= -2 svalue)
+                 ;; TODO: Add checks to make sure padding is correct.
+                 ;; Currently, padding is ignored.
+                 )
+                ((= -3 svalue)
+                 ;; Ignore whitespace.
+                 )
+                ((minusp svalue)
+                 (error "Bad character ~W in base64 decode" char))
+                (t
                  (setf bitstore (logior
                                  (the fixnum (ash bitstore 6))
                                  svalue))
@@ -86,16 +87,7 @@
                         (:stream
                          '(write-char (code-char ovalue) stream)))
                      (incf ridx)
-                     (setf bitstore (the fixnum (logand bitstore #xFF))))))
-                ((char= char pad)
-                 ;; Could add checks to make sure padding is correct
-                 ;; Currently, padding is ignored
-                 )
-                ((whitespace-p char)
-                 ;; Ignore whitespace
-                 )
-                ((minusp svalue)
-                 (error "Bad character ~W in base64 decode" char))))
+                     (setf bitstore (the fixnum (logand bitstore #xFF))))))))
          ,(case output-type
             (:stream
              'stream)
@@ -110,13 +102,11 @@
 ;; input-format can be :character or :usb8
 
 (defun base64-string-to-integer (string &key (uri nil))
-  "Decodes a base64 string to an integer"
+  "Decodes a base64 string to an integer."
   (declare (string string)
            (optimize (speed 3) (safety 1) (space 0)))
-  (let ((pad (if uri *uri-pad-char* *pad-char*))
-        (decode-table (if uri *uri-decode-table* *decode-table*)))
-    (declare (type decode-table decode-table)
-             (character pad))
+  (let ((decode-table (if uri *uri-decode-table* *decode-table*)))
+    (declare (type decode-table decode-table))
     (let ((value 0))
       (declare (integer value))
       (loop
@@ -125,25 +115,24 @@
            (aref decode-table (the fixnum (char-code char)))
          do
            (cond
-             ((>= svalue 0)
-              (setq value (+ svalue (ash value 6))))
-             ((char= char pad)
+             ((= -2 svalue)
+              ;; TODO: Add checks to make sure padding is correct.
               (setq value (ash value -2)))
-             ((whitespace-p char)
-              ; ignore whitespace
+             ((= -3 svalue)
+              ;; Ignore whitespace.
               )
              ((minusp svalue)
-              (warn "Bad character ~W in base64 decode" char))))
+              (error "Bad character ~W in base64 decode" char))
+             (t
+              (setq value (+ svalue (ash value 6))))))
       value)))
 
 (defun base64-stream-to-integer (stream &key (uri nil))
-  "Decodes a base64 string to an integer"
+  "Decodes a base64 stream to an integer."
   (declare (stream stream)
            (optimize (speed 3) (space 0) (safety 1)))
-  (let ((pad (if uri *uri-pad-char* *pad-char*))
-        (decode-table (if uri *uri-decode-table* *decode-table*)))
-    (declare (type decode-table decode-table)
-             (character pad))
+  (let ((decode-table (if uri *uri-decode-table* *decode-table*)))
+    (declare (type decode-table decode-table))
     (do* ((value 0)
           (char (read-char stream nil #\null)
                 (read-char stream nil #\null)))
@@ -154,11 +143,13 @@
       (let ((svalue (aref decode-table (the fixnum (char-code char)))))
            (declare (fixnum svalue))
            (cond
-             ((>= svalue 0)
-              (setq value (+ svalue (ash value 6))))
-             ((char= char pad)
+             ((= -2 svalue)
+              ;; TODO: Add checks to make sure padding is correct.
               (setq value (ash value -2)))
-             ((whitespace-p char)               ; ignore whitespace
+             ((= -3 svalue)
+              ;; Ignore whitespace.
               )
              ((minusp svalue)
-              (warn "Bad character ~W in base64 decode" char)))))))
+              (error "Bad character ~W in base64 decode" char))
+             (t
+              (setq value (+ svalue (ash value 6)))))))))
