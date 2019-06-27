@@ -52,10 +52,13 @@
          (loop
            with bitstore of-type fixnum = 0
            with bitcount of-type fixnum = 0
+           with svalue of-type (signed-byte 8) = 0
            for char of-type character across input
-           for svalue of-type fixnum = (aref decode-table
-                                             (the fixnum (char-code char)))
+           for code of-type fixnum = (char-code char)
            do (cond
+                ((or (< 255 code)
+                     (= -1 (setq svalue (aref decode-table code))))
+                 (error "Bad character ~W in base64 decode" char))
                 ((= -2 svalue)
                  ;; TODO: Add checks to make sure padding is correct.
                  ;; Currently, padding is ignored.
@@ -63,8 +66,6 @@
                 ((= -3 svalue)
                  ;; Ignore whitespace.
                  )
-                ((minusp svalue)
-                 (error "Bad character ~W in base64 decode" char))
                 (t
                  (setf bitstore (logior
                                  (the fixnum (ash bitstore 6))
@@ -110,19 +111,19 @@
     (let ((value 0))
       (declare (integer value))
       (loop
-         for char of-type character across string
-         for svalue of-type fixnum =
-           (aref decode-table (the fixnum (char-code char)))
-         do
-           (cond
+        with svalue of-type (signed-byte 8) = 0
+        for char of-type character across string
+        for code of-type fixnum = (char-code char)
+        do (cond
+             ((or (< 255 code)
+                  (= -1 (setq svalue (aref decode-table code))))
+              (error "Bad character ~W in base64 decode" char))
              ((= -2 svalue)
               ;; TODO: Add checks to make sure padding is correct.
               (setq value (ash value -2)))
              ((= -3 svalue)
               ;; Ignore whitespace.
               )
-             ((minusp svalue)
-              (error "Bad character ~W in base64 decode" char))
              (t
               (setq value (+ svalue (ash value 6))))))
       value)))
@@ -133,23 +134,19 @@
            (optimize (speed 3) (space 0) (safety 1)))
   (let ((decode-table (if uri *uri-decode-table* *decode-table*)))
     (declare (type decode-table decode-table))
-    (do* ((value 0)
-          (char (read-char stream nil #\null)
-                (read-char stream nil #\null)))
-         ((eq char #\null)
-          value)
-      (declare (integer value)
-               (character char))
-      (let ((svalue (aref decode-table (the fixnum (char-code char)))))
-           (declare (fixnum svalue))
-           (cond
-             ((= -2 svalue)
-              ;; TODO: Add checks to make sure padding is correct.
-              (setq value (ash value -2)))
-             ((= -3 svalue)
-              ;; Ignore whitespace.
-              )
-             ((minusp svalue)
-              (error "Bad character ~W in base64 decode" char))
-             (t
-              (setq value (+ svalue (ash value 6)))))))))
+    (loop with value of-type integer = 0
+          with svalue of-type (signed-byte 8) = 0
+          for char of-type (or null character) = (read-char stream nil nil)
+          for code of-type fixnum = (char-code char)
+          do (cond
+               ((or (< 255 code)
+                    (= -1 (setq svalue (aref decode-table code))))
+                (error "Bad character ~W in base64 decode" char))
+               ((= -2 svalue)
+                ;; TODO: Add checks to make sure padding is correct.
+                (setq value (ash value -2)))
+               ((= -3 svalue)
+                ;; Ignore whitespace.
+                )
+               (t
+                (setq value (+ svalue (ash value 6))))))))
