@@ -31,6 +31,11 @@
            #:integer-to-base64-string
            #:integer-to-base64-stream
 
+           ;; Conditions.
+           #:base64-error
+           #:bad-base64-character
+           #:incomplete-base64-data
+
            ;; For creating custom encode/decode tables.
            #:make-decode-table
            ;; What's the point of exporting these?
