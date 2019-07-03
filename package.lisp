@@ -15,13 +15,13 @@
   (:nicknames #:base64)
   (:use #:cl)
   (:export #:base64-stream-to-integer
+           #:base64-stream-to-string
+           #:base64-stream-to-stream
+           #:base64-stream-to-usb8-array
            #:base64-string-to-integer
            #:base64-string-to-string
-           #:base64-stream-to-string
            #:base64-string-to-stream
-           #:base64-stream-to-stream
            #:base64-string-to-usb8-array
-           #:base64-stream-to-usb8-array
            #:string-to-base64-string
            #:string-to-base64-stream
            #:usb8-array-to-base64-string
