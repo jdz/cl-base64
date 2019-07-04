@@ -69,15 +69,20 @@
 
 (defmacro define-base64-decoder (hose sink)
   `(defun ,(intern (format nil "~A-~A-~A-~A" '#:base64 hose '#:to sink))
-       (input &key (uri nil)
+       (input &key (table +decode-table+)
+                   (uri nil)
                    ,@(when (eq sink :stream) `(stream))
                    (whitespace :ignore))
      ,(format nil "~
 Decode Base64 ~(~A~) to ~(~A~).
 
-If URI is true, URL-friendly characters (#\\- and #\\_, instead of #\\+
-and #\\/) are expected as encodings for the last two entries in decoding
-table.
+TABLE is the decode table to use.  Two decode tables are provided:
++DECODE-TABLE+ (used by default) and +URI-DECODE-TABLE+.  See
+MAKE-DECODE-TABLE.
+
+For backwards-compatibility the URI parameter is supported.  If it is
+true, then +URI-DECODE-TABLE+ is used, and the value for TABLE
+parameter is ignored.
 
 WHITESPACE can be one of:
 
@@ -86,11 +91,12 @@ WHITESPACE can be one of:
   :error  - Signal a BAD-BASE64-CHARACTER condition using ERROR."
               hose sink)
      (declare (optimize (speed 3) (safety 1))
+              (type decode-table table)
               (type ,(ecase hose
                        (:stream 'stream)
                        (:string 'string))
                     input))
-     (let/typed ((decode-table (if uri *uri-decode-table* *decode-table*)
+     (let/typed ((decode-table (if uri +uri-decode-table+ table)
                                decode-table)
                  ,@(ecase sink
                      (:stream)

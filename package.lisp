@@ -38,6 +38,8 @@
 
            ;; For creating custom encode/decode tables.
            #:make-decode-table
+           #:+decode-table+
+           #:+uri-decode-table+
            ;; What's the point of exporting these?
            #:*uri-encode-table*
            #:*uri-decode-table*
@@ -45,35 +47,47 @@
 
 (in-package #:cl-base64)
 
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defvar *encode-table*
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/")
+  (declaim (type simple-string *encode-table*))
 
-(defvar *encode-table*
-  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/")
-(declaim (type simple-string *encode-table*))
+  (defvar *uri-encode-table*
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_")
+  (declaim (type simple-string *uri-encode-table*))
 
-(defvar *uri-encode-table*
-  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_")
-(declaim (type simple-string *uri-encode-table*))
+  (defvar *pad-char* #\=)
+  (defvar *uri-pad-char* #\.)
+  (declaim (type character *pad-char* *uri-pad-char*))
 
-(deftype decode-table () '(simple-array (signed-byte 8) (128)))
+  (deftype decode-table () '(simple-array (signed-byte 8) (128)))
+  (defun make-decode-table (encode-table pad-char
+                            &key (whitespace-chars
+                                  '(#\Linefeed #\Return #\Space #\Tab)))
+    (assert (< (length encode-table) 128)
+            (encode-table)
+            "Encode table too big: ~S" encode-table)
+    (let ((dt (make-array 128 :element-type '(signed-byte 8)
+                              :initial-element -1)))
+      (declare (type decode-table dt))
+      (loop for char across encode-table
+            for index upfrom 0
+            do (setf (aref dt (char-code char)) index))
+      (setf (aref dt (char-code pad-char)) -2)
+      (loop for char in whitespace-chars
+            do (setf (aref dt (char-code char)) -3))
+      dt)))
 
-(defun make-decode-table (encode-table pad-char
-                          &key (whitespace-chars
-                                '(#\Linefeed #\Return #\Space #\Tab)))
-  (let ((dt (make-array 128 :element-type '(signed-byte 8)
-                            :initial-element -1)))
-    (declare (type decode-table dt))
-    (loop for char across encode-table
-          for index upfrom 0
-          do (setf (aref dt (char-code char)) index))
-    (setf (aref dt (char-code pad-char)) -2)
-    (loop for char in whitespace-chars
-          do (setf (aref dt (char-code char)) -3))
-    dt))
+(defconstant +decode-table+
+  (if (boundp '+decode-table+)
+      +decode-table+
+      (make-decode-table *encode-table* *pad-char*)))
+(defvar *decode-table* +decode-table+ "Deprecated.")
+(declaim (type decode-table +decode-table+ *decode-table*))
 
-(defvar *pad-char* #\=)
-(defvar *uri-pad-char* #\.)
-(declaim (type character *pad-char* *uri-pad-char*))
-
-(defvar *decode-table* (make-decode-table *encode-table* *pad-char*))
-
-(defvar *uri-decode-table* (make-decode-table *uri-encode-table* *uri-pad-char*))
+(defconstant +uri-decode-table+
+  (if (boundp '+uri-decode-table+)
+      +uri-decode-table+
+      (make-decode-table *uri-encode-table* *uri-pad-char*)))
+(defvar *uri-decode-table* +uri-decode-table+ "Deprecated.")
+(declaim (type decode-table +uri-decode-table+ *uri-decode-table*))
