@@ -70,13 +70,20 @@
 (defmacro define-base64-decoder (hose sink)
   `(defun ,(intern (format nil "~A-~A-~A-~A" '#:base64 hose '#:to sink))
        (input &key (uri nil)
-                   ,@(when (eq sink :stream) `(stream)))
+                   ,@(when (eq sink :stream) `(stream))
+                   (whitespace :ignore))
      ,(format nil "~
 Decode Base64 ~(~A~) to ~(~A~).
 
 If URI is true, URL-friendly characters (#\\- and #\\_, instead of #\\+
 and #\\/) are expected as encodings for the last two entries in decoding
-table."
+table.
+
+WHITESPACE can be one of:
+
+  :ignore - Whitespace characters are ignored (default).
+  :signal - Signal a BAD-BASE64-CHARACTER condition using SIGNAL.
+  :error  - Signal a BAD-BASE64-CHARACTER condition using ERROR."
               hose sink)
      (declare (optimize (speed 3) (safety 1))
               (type ,(ecase hose
@@ -115,10 +122,18 @@ table."
                            (rpos 0 array-index)))))
                      (:integer
                       `((result 0 unsigned-byte)))))
-       (flet ((bad-char (pos code)
-                (error 'bad-base64-character :input input
-                                             :position pos
-                                             :code code))
+       (flet ((bad-char (pos code &optional (action :error))
+                (let ((args (list 'bad-base64-character
+                                  :input input
+                                  :position pos
+                                  :code code)))
+                  (ecase action
+                    (:error
+                     (apply #'error args))
+                    (:cerror
+                     (apply #'cerror "Ignore the error and continue." args))
+                    (:signal
+                     (apply #'signal args)))))
               (incomplete-input (pos)
                 (error 'incomplete-base64-data :input input :position pos)))
          ,(let ((body
@@ -151,8 +166,14 @@ table."
                                   (t
                                    (bad-char ipos code))))
                            ((= -3 svalue)
-                            ;; Ignore whitespace.
-                            )
+                            (ecase whitespace
+                              (:ignore
+                               ;; Do nothing.
+                               )
+                              (:error
+                               (bad-char ipos code :error))
+                              (:signal
+                               (bad-char ipos code :signal))))
                            ((not (zerop padchar))
                             (bad-char ipos code))
                            (t
