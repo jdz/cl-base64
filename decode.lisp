@@ -71,7 +71,13 @@
   `(defun ,(intern (format nil "~A-~A-~A-~A" '#:base64 hose '#:to sink))
        (input &key (uri nil)
                    ,@(when (eq sink :stream) `(stream)))
-     ,(format nil "Decode Base64 ~(~A~) to ~(~A~)." hose sink)
+     ,(format nil "~
+Decode Base64 ~(~A~) to ~(~A~).
+
+If URI is true, URL-friendly characters (#\\- and #\\_, instead of #\\+
+and #\\/) are expected as encodings for the last two entries in decoding
+table."
+              hose sink)
      (declare (optimize (speed 3) (safety 1))
               (type ,(ecase hose
                        (:stream 'stream)
