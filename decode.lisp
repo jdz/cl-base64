@@ -55,9 +55,12 @@
   `(integer 0 (,char-code-limit)))
 
 (defmacro etypecase/unroll ((var &rest types) &body body)
-  `(etypecase ,var
-     ,@(loop for type in types
-             collect `(,type ,@body))))
+  #+sbcl `(etypecase ,var
+            ,@(loop for type in types
+                    collect `(,type ,@body)))
+  #-sbcl `(locally
+              (declare (type (or ,@types) ,var))
+            ,@body))
 
 (defmacro let/typed ((&rest vars) &body body)
   `(let ,(loop for (var value) in vars
@@ -148,7 +151,7 @@ WHITESPACE can be one of:
                                (bitcount 0 (integer 0 14))
                                (svalue -1 (signed-byte 8))
                                (padchar 0 (integer 0 3))
-                               (code 0))
+                               (code 0 fixnum))
                      (loop
                        ,@(ecase hose
                            (:string
@@ -183,11 +186,15 @@ WHITESPACE can be one of:
                            ((not (zerop padchar))
                             (bad-char ipos code))
                            (t
-                            (setf bitstore (logior (ash bitstore 6) svalue))
+                            (setf bitstore (logior (the (unsigned-byte 24)
+                                                        (ash bitstore 6))
+                                                   svalue))
                             (incf bitcount 6)
                             (when (>= bitcount 8)
                               (decf bitcount 8)
-                              (let ((byte (ldb (byte 8 bitcount) bitstore)))
+                              (let ((byte (logand (the (unsigned-byte 24)
+                                                       (ash bitstore (- bitcount)))
+                                                  #xFF)))
                                 (declare (type (unsigned-byte 8) byte))
                                 ,@(ecase sink
                                     (:usb8-array
@@ -232,12 +239,9 @@ WHITESPACE can be one of:
               (:string
                `(let ((length (length input)))
                   (declare (type array-length length))
-                  (etypecase/unroll (input
-                                     ;; In CCL CHARACTER and BASE-CHAR are the
-                                     ;; same.
-                                     #-ccl simple-base-string
-                                     simple-string
-                                     string)
+                  (etypecase/unroll (input simple-base-string
+                                           simple-string
+                                           string)
                     ,body)))
               (:stream
                body)))))))
