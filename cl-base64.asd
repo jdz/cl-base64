@@ -32,12 +32,12 @@
   (operate 'load-op 'cl-base64-tests)
   (operate 'test-op 'cl-base64-tests :force t))
 
-(defsystem cl-base64-tests
+(defsystem cl-base64/tests
     :depends-on (cl-base64 ptester kmrcl)
     :components
     ((:file "tests")))
 
-(defmethod perform ((o test-op) (c (eql (find-system 'cl-base64-tests))))
+(defmethod perform ((o test-op) (c (eql (find-system 'cl-base64/tests))))
   (operate 'load-op 'cl-base64-tests)
   (or (funcall (intern (symbol-name '#:do-tests)
 		       (find-package '#:cl-base64-tests)))
