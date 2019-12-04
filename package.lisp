@@ -80,14 +80,14 @@
 
 (defconstant +decode-table+
   (if (boundp '+decode-table+)
-      +decode-table+
+      (symbol-value '+decode-table+)
       (make-decode-table *encode-table* *pad-char*)))
 (defvar *decode-table* +decode-table+ "Deprecated.")
 (declaim (type decode-table +decode-table+ *decode-table*))
 
 (defconstant +uri-decode-table+
   (if (boundp '+uri-decode-table+)
-      +uri-decode-table+
+      (symbol-value '+uri-decode-table+)
       (make-decode-table *uri-encode-table* *uri-pad-char*)))
 (defvar *uri-decode-table* +uri-decode-table+ "Deprecated.")
 (declaim (type decode-table +uri-decode-table+ *uri-decode-table*))
